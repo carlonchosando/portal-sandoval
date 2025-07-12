@@ -1,0 +1,1 @@
+# Este archivo vacío le dice a Python que 'migrations' es un paquete de Python.

@@ -1,0 +1,21 @@
+# --- Secretos ---
+# ¡NUNCA subas este archivo a un repositorio público!
+.env
+
+# --- Dependencias y Cachés ---
+# Estas carpetas se pueden regenerar y no deben estar en el control de versiones.
+backend/__pycache__/
+frontend/node_modules/
+frontend/build/
+
+# --- Archivos de Usuario ---
+# Los archivos subidos por los usuarios (imágenes, PDFs) se gestionan con volúmenes de Docker, no con Git.
+backend/media/
+
+# --- Archivos del Sistema Operativo ---
+.DS_Store
+Thumbs.db
+
+# --- Archivos de IDEs (Opcional, pero buena práctica) ---
+.vscode/
+.idea/

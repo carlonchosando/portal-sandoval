@@ -1,0 +1,14 @@
+# Framework web principal
+django
+# Para crear APIs RESTful
+djangorestframework
+# Conector para la base de datos PostgreSQL
+psycopg2-binary
+# Para leer variables de entorno desde el archivo .env
+python-dotenv
+# Para manejar CORS (Cross-Origin Resource Sharing)
+django-cors-headers
+# Para autenticación por Tokens (JSON Web Tokens)
+djangorestframework-simplejwt
+
+django-cors-headers

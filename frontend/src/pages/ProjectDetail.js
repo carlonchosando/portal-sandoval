@@ -46,8 +46,9 @@ function ProjectDetail() {
   // Se llama desde AddTaskForm cuando se envía el formulario.
   const handleAddTask = async (taskFormData) => {
     try {
-      // 1. Creamos la nueva tarea en el backend
-      await apiClient.post('/tasks/', taskFormData, {
+      // 1. Creamos la nueva tarea usando la ruta anidada del proyecto.
+      // Esto es más lógico y seguro, ya que el backend asociará la tarea al proyecto correcto.
+      await apiClient.post(`/projects/${projectId}/tasks/`, taskFormData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       // 2. Volvemos a pedir la lista de tareas actualizada.

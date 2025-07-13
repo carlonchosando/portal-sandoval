@@ -31,6 +31,15 @@ li {
   margin-bottom: 10px;
   border-radius: 5px;
   text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item-main-info {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
 /* --- Estilos para el formulario --- */
@@ -326,4 +335,139 @@ li {
 .collapsible-content {
   padding: 1.5rem;
   border-top: 1px solid #e0e0e0;
+}
+
+/* --- Estilos para los Paneles del Dashboard --- */
+.dashboard-panel {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* --- Estilos Mejorados para el Formulario de Edición --- */
+.edit-form-container {
+  margin-top: 1.5rem;
+  padding: 1.5rem; /* Padding en todos los lados para más aire */
+  border-top: 3px solid #007bff; /* Línea azul más gruesa para destacar */
+  background-color: #f8f9fa; /* Un gris muy claro y profesional */
+  border-radius: 0 0 8px 8px; /* Redondeamos solo las esquinas inferiores para que se una al panel */
+  animation: slideDown 0.4s ease-out; /* Animación de deslizamiento suave */
+}
+
+/* Animación para que el formulario no aparezca de golpe */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.edit-form-container h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #343a40;
+  font-weight: 600;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 0.75rem;
+}
+
+.edit-form-container p {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #495057;
+  margin-top: 1.5rem;
+}
+
+.edit-form-container hr {
+  border: 0;
+  border-top: 1px solid #dee2e6;
+  margin: 1.5rem 0;
+}
+
+/* Contenedor para los botones de acción */
+.edit-form-container .form-actions {
+  display: flex;
+  justify-content: flex-end; /* Alinea los botones a la derecha */
+  gap: 0.75rem; /* Espacio entre botones */
+  margin-top: 1.5rem;
+}
+
+/* Estilo para el botón secundario (Cancelar) */
+.edit-form-container .button-cancel {
+  background-color: #6c757d; /* Un gris neutro */
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.edit-form-container .button-cancel:hover {
+  background-color: #5a6268;
+}
+
+/* --- Estilos para Botones de Acción en Listas (Editar, Eliminar) --- */
+.item-actions {
+  display: flex;
+  gap: 0.5rem; /* Espacio entre botones */
+  margin-left: 1rem;
+}
+
+.button-edit, .button-delete, .button-restore {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap; /* Evita que el texto del botón se parta */
+}
+
+.button-edit {
+  background-color: #ffc107; /* Amarillo */
+  color: #212529;
+}
+
+.button-delete {
+  background-color: #dc3545; /* Rojo */
+  color: white;
+}
+
+.button-restore {
+  background-color: #17a2b8; /* Cian/Teal */
+  color: white;
+}
+
+/* --- Estilos para la lista de archivados --- */
+.archived-list li {
+  background-color: #f8f9fa; /* Un fondo más neutro */
+  border-left: 5px solid #6c757d; /* Borde gris */
+  opacity: 0.7; /* Hacemos que se vea atenuado */
+  transition: opacity 0.2s ease;
+}
+
+.archived-list li:hover {
+  opacity: 1; /* Al pasar el ratón, se ve normal para facilitar la lectura */
+}
+
+/* --- Estilos para los costes en la lista --- */
+.item-costs {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: #495057;
+  background-color: #e9ecef;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  align-self: flex-start; /* Para que no ocupe todo el ancho */
+  display: flex;
+  gap: 1rem;
 }

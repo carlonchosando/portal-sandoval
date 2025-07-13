@@ -19,7 +19,7 @@ class Client(models.Model):
     # Por simplicidad, por ahora usaremos el del User.
     phone = models.CharField(max_length=50, blank=True, null=True, verbose_name="Teléfono")
     internal_notes = models.TextField(blank=True, null=True, verbose_name="Notas Internas")
-
+    is_active = models.BooleanField(default=True, help_text="Designa si este cliente debe ser tratado como activo. Desmarcar en lugar de borrar.")
     # Timestamps para auditoría
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Última Actualización")

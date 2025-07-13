@@ -9,23 +9,20 @@ class ProjectForTaskSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 class TaskSerializer(serializers.ModelSerializer):
-    # Para leer (GET), mostramos detalles del proyecto. Es de solo lectura.
-    project_details = ProjectForTaskSerializer(source='project', read_only=True)
-
-    # Para escribir (POST), esperamos un ID de proyecto.
-    # El frontend lo envía con la clave 'project'.
+    # Por defecto, este campo aceptará un ID para escribir (POST/PUT).
+    # Usaremos to_representation para cambiar cómo se muestra al leer (GET).
     project = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
 
     class Meta:
         model = Task
         fields = [
             'id',
-            'project',          # Para escribir (acepta un ID)
-            'project_details',  # Para leer (muestra el objeto anidado)
+            'project',          # Acepta ID al escribir, muestra objeto al leer.
             'title',
             'description',
             'due_date',
             'status',
+            'cost',
             'attachment',
             'youtube_url',
             'created_at',
@@ -34,8 +31,12 @@ class TaskSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at']
 
     def to_representation(self, instance):
-        """Personaliza la salida JSON para que sea más amigable para el frontend."""
+        """
+        Personaliza la salida del serializer para las peticiones GET.
+        Convierte el 'project' (que por defecto sería solo un ID) en un objeto anidado
+        con los detalles del proyecto.
+        """
         representation = super().to_representation(instance)
-        # Movemos los detalles del proyecto a la clave 'project' para consistencia.
-        representation['project'] = representation.pop('project_details')
+        # Usamos el ProjectForTaskSerializer para obtener los detalles del proyecto.
+        representation['project'] = ProjectForTaskSerializer(instance.project).data
         return representation

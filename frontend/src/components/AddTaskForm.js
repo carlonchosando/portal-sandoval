@@ -1,99 +1,113 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import apiClient from '../api';
 
-function AddTaskForm({ projectId, projects = [], onTaskAdded }) {
-  const [formData, setFormData] = useState({
+function AddTaskForm({ onTaskAdded, projectId = null }) {
+  const [taskFormData, setTaskFormData] = useState({
     title: '',
     description: '',
+    project: projectId || '', // Pre-selecciona el proyecto si se proporciona
     due_date: '',
+    cost: '', // Añadimos el campo de costo al estado inicial
+    attachment: null,
     youtube_url: '',
-    project: '', // Renombrado de project_id para consistencia con la API
   });
-  const [file, setFile] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [errors, setErrors] = useState([]); // Cambiado a un array para múltiples mensajes
+  const [projects, setProjects] = useState([]);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    // Solo cargamos la lista de proyectos si no estamos en una página de proyecto específico
+    if (!projectId) {
+      apiClient.get('/projects/')
+        .then(response => setProjects(response.data))
+        .catch(err => console.error("Error al cargar proyectos:", err));
+    }
+  }, [projectId]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const { name, value, files } = e.target;
+    if (name === 'attachment') {
+      setTaskFormData({ ...taskFormData, [name]: files[0] });
+    } else {
+      setTaskFormData({ ...taskFormData, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title.trim()) {
-      setErrors(['El título es obligatorio.']);
-      return;
-    }
-    if (!projectId && !formData.project) {
-      setErrors(['Debes seleccionar un proyecto.']);
-      return;
-    }
-    setSubmitting(true);
-    setErrors([]);
+    setError('');
+    setSuccess('');
 
-    // Usamos FormData porque vamos a enviar un archivo.
-    // Esta es la forma estándar de manejar "multipart/form-data".
-    const data = new FormData();
-    data.append('title', formData.title);
-    data.append('description', formData.description);
-    data.append('project', projectId || formData.project); // Usa el ID de la prop o del selector
-    if (formData.due_date) data.append('due_date', formData.due_date);
-    if (formData.youtube_url) data.append('youtube_url', formData.youtube_url);
-    if (file) data.append('attachment', file);
+    if (!taskFormData.project) {
+      setError('Debes seleccionar un proyecto.');
+      return;
+    }
+
+    const formData = new FormData();
+    // Añadimos todos los campos al FormData
+    formData.append('project', taskFormData.project);
+    formData.append('title', taskFormData.title);
+    formData.append('description', taskFormData.description);
+    if (taskFormData.due_date) {
+      formData.append('due_date', taskFormData.due_date);
+    }
+    // Añadimos el costo solo si tiene un valor
+    if (taskFormData.cost) {
+      formData.append('cost', taskFormData.cost);
+    }
+    if (taskFormData.attachment) {
+      formData.append('attachment', taskFormData.attachment);
+    }
+    if (taskFormData.youtube_url) {
+      formData.append('youtube_url', taskFormData.youtube_url);
+    }
 
     try {
-      // La función onTaskAdded (de Dashboard o ProjectDetail) recibe el objeto FormData.
-      await onTaskAdded(data);
-      // Limpiar el formulario después de un envío exitoso
-      setFormData({ title: '', description: '', due_date: '', youtube_url: '', project: '' });
-      setFile(null);
-      // Si hay un input de archivo, hay que limpiarlo por separado
+      await onTaskAdded(formData);
+      setSuccess('¡Tarea añadida con éxito!');
+      // Limpiamos el formulario
+      setTaskFormData({
+        title: '',
+        description: '',
+        project: projectId || '',
+        due_date: '',
+        cost: '',
+        attachment: null,
+        youtube_url: '',
+      });
+      // Limpiamos el input de archivo manualmente
       if (e.target.attachment) e.target.attachment.value = null;
     } catch (err) {
-      if (err.response && err.response.data) {
-        // Si el backend de Django envía errores de validación, los mostramos.
-        // err.response.data es un objeto como { field_name: ["error message"] }
-        const errorMessages = Object.entries(err.response.data).map(([field, messages]) => {
-          // Hacemos el código más robusto: comprobamos si 'messages' es un array.
-          // Si lo es, lo unimos. Si no (si es un simple string), lo usamos directamente.
-          const messageText = Array.isArray(messages) ? messages.join(' ') : messages;
-          return `${field}: ${messageText}`;
-        });
-        setErrors(errorMessages.length > 0 ? errorMessages : ['Error desconocido del servidor.']);
+      const errorData = err.response?.data;
+      if (errorData && typeof errorData === 'object') {
+        const errorMessages = Object.values(errorData).flat().join(' ');
+        setError(`Error: ${errorMessages}`);
       } else {
-        setErrors([err.message || 'Ocurrió un error inesperado.']);
+        setError('Error al añadir la tarea. Revisa los campos.');
       }
-    } finally {
-      setSubmitting(false);
     }
   };
 
   return (
     <div className="form-container add-task-form">
-      <h4>Añadir Nueva Tarea</h4>
+      <h3>Añadir Nueva Tarea</h3>
       <form onSubmit={handleSubmit}>
-        {/* El selector de proyecto solo aparece si no estamos en la página de un proyecto específico */}
+        {/* El selector de proyecto solo aparece si no estamos en la página de un proyecto */}
         {!projectId && (
-          <select name="project" value={formData.project} onChange={handleChange} required>
+          <select name="project" value={taskFormData.project} onChange={handleChange} required>
             <option value="">-- Selecciona un Proyecto --</option>
             {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         )}
-        <input name="title" type="text" value={formData.title} onChange={handleChange} placeholder="Título de la tarea" required />
-        <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Descripción detallada (opcional)" />
-        <input name="due_date" type="date" value={formData.due_date} onChange={handleChange} title="Fecha límite" />
-        <input name="youtube_url" type="url" value={formData.youtube_url} onChange={handleChange} placeholder="URL de video de YouTube (opcional)" />
-        <label htmlFor="attachment-upload" className="file-upload-label">Adjuntar archivo (opcional)</label>
-        <input id="attachment-upload" name="attachment" type="file" onChange={handleFileChange} />
-        <button type="submit" disabled={submitting}>{submitting ? 'Añadiendo...' : 'Añadir Tarea'}</button>
-        {errors.length > 0 && (
-          <div className="error-message">
-            {errors.map((error, index) => <p key={index}>{error}</p>)}
-          </div>
-        )}
+        <input type="text" name="title" value={taskFormData.title} onChange={handleChange} placeholder="Título de la tarea" required />
+        <textarea name="description" value={taskFormData.description} onChange={handleChange} placeholder="Descripción detallada (opcional)" />
+        <input type="date" name="due_date" value={taskFormData.due_date} onChange={handleChange} />
+        <input type="number" name="cost" value={taskFormData.cost} onChange={handleChange} placeholder="Costo (ej: 150.00)" step="0.01" />
+        <input type="file" name="attachment" onChange={handleChange} />
+        <input type="url" name="youtube_url" value={taskFormData.youtube_url} onChange={handleChange} placeholder="Enlace de YouTube (opcional)" />
+        <button type="submit">Añadir Tarea</button>
+        {error && <p className="error-message">{error}</p>}
+        {success && <p className="success-message">{success}</p>}
       </form>
     </div>
   );

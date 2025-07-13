@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import Client
 from tasks.models import Task
+from decimal import Decimal
 from django.db.models import Sum
 
 class UserSerializer(serializers.ModelSerializer):
@@ -100,12 +101,12 @@ class ClientSerializer(serializers.ModelSerializer):
 
     def get_initial_cost(self, obj):
         """Suma los costes base de todos los proyectos del cliente."""
-        return obj.projects.aggregate(total=Sum('initial_cost'))['total'] or 0.00
+        return obj.projects.aggregate(total=Sum('initial_cost'))['total'] or Decimal('0.00')
 
     def get_extra_cost(self, obj):
         """Suma los costes de todas las tareas de todos los proyectos del cliente."""
         # Buscamos todas las tareas cuyo proyecto pertenece a este cliente.
-        return Task.objects.filter(project__client=obj).aggregate(total=Sum('cost'))['total'] or 0.00
+        return Task.objects.filter(project__client=obj).aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
 
     def get_total_cost(self, obj):
         """Suma el coste inicial y los costes extra."""

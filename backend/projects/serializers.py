@@ -1,37 +1,57 @@
 from rest_framework import serializers
 from .models import Project
+from clients.serializers import ClientSerializer
 from clients.models import Client
-
-# Un serializer simple para anidar la información del cliente dentro de un proyecto.
-class ClientForProjectSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Client
-        fields = ['id', 'business_name']
+from tasks.models import Task
+from django.db.models import Sum
+from decimal import Decimal
 
 class ProjectSerializer(serializers.ModelSerializer):
     """
     Serializer para el modelo Project.
-    Maneja la lectura (mostrando detalles del cliente) y la escritura (aceptando un ID de cliente).
+    Ahora incluye campos calculados para el coste inicial, extras, total y el número de tareas.
     """
-    # Para leer (GET), mostramos los detalles del cliente. Es de solo lectura.
-    client = ClientForProjectSerializer(read_only=True)
-
-    # Para escribir (POST/PUT), aceptamos un ID de cliente. Es de solo escritura.
-    # El `source='client'` le dice a DRF que use este campo para poblar la relación 'client'.
+    # Para LEER: Usamos el ClientSerializer para mostrar los datos del cliente de forma anidada.
+    client = ClientSerializer(read_only=True)
+    # Para ESCRIBIR: Aceptamos un simple ID de cliente.
     client_id = serializers.PrimaryKeyRelatedField(
-        queryset=Client.objects.all(), source='client', write_only=True
+        queryset=Client.objects.all(), source='client', write_only=True,
+        label="ID del Cliente"
     )
 
+    # Nuevos campos calculados que se añadirán a la respuesta de la API.
+    extra_cost = serializers.SerializerMethodField()
+    total_cost = serializers.SerializerMethodField()
+    task_count = serializers.SerializerMethodField()
+    
     class Meta:
         model = Project
+        # Añadimos los nuevos campos a la lista de fields.
         fields = [
-            'id', 'name', 'description', 'status', 'client', 'client_id', 
-            'created_at', 'updated_at',
-            # Nuevos campos añadidos
-            'start_date', 
-            'initial_cost', 
-            'currency',
-            'attachment', 
-            'youtube_url'
+            'id', 'name', 'client', 'client_id', 'description', 'status', 
+            'initial_cost', 'extra_cost', 'total_cost', 'task_count',
+            'created_at'
         ]
-        read_only_fields = ['created_at', 'updated_at', 'client']
+
+    def get_extra_cost(self, obj):
+        """
+        Calcula el coste de las tareas extra.
+        Suma los costes de todas las tareas asociadas a este proyecto.
+        'obj' es la instancia del proyecto que se está serializando.
+        """
+        return obj.tasks.aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
+
+    def get_total_cost(self, obj):
+        """
+        Calcula el coste total del proyecto.
+        Suma el coste inicial del proyecto + la suma de los costes de todas sus tareas.
+        """
+        # Reutilizamos el método anterior para no repetir código
+        extra = self.get_extra_cost(obj)
+        return obj.initial_cost + extra
+
+    def get_task_count(self, obj):
+        """
+        Cuenta cuántas tareas están asociadas a este proyecto.
+        """
+        return obj.tasks.count()

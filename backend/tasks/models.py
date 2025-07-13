@@ -14,8 +14,8 @@ class Task(models.Model):
     description = models.TextField(blank=True, default='')
     due_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='PENDIENTE')
-    # Hacemos el costo opcional para evitar errores al crear tareas sin este dato.
-    cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    # Añadimos un valor por defecto de 0.00 para evitar errores al crear tareas sin coste.
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     attachment = models.FileField(upload_to='task_attachments/', blank=True, null=True, verbose_name='Archivo Adjunto')
     youtube_url = models.URLField(max_length=255, blank=True, null=True, verbose_name='URL de YouTube')
     created_at = models.DateTimeField(auto_now_add=True)

@@ -1,0 +1,31 @@
+.tasks-section-container {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem; /* Espacio antes de que aparezca la lista */
+}
+
+.tasks-header h2 {
+    margin: 0; /* Quitar margen por defecto del h2 */
+}
+
+.toggle-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background-color: #6c757d; /* Un color secundario */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.toggle-button:hover {
+    background-color: #5a6268;
+}

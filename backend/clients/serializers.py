@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import Client
+from django.db import IntegrityError
 from tasks.models import Task
 from decimal import Decimal
 from django.db.models import Sum
@@ -60,13 +61,21 @@ class ClientSerializer(serializers.ModelSerializer):
                 "detail": "El nombre de usuario, email y contraseña son obligatorios para crear un nuevo cliente."
             })
 
-        # Extraemos los datos para el usuario y creamos el objeto User.
-        user = User.objects.create_user(
-            username=username,
-            email=email,
-            password=password
-        )
-        # Con el resto de los datos, creamos el objeto Client, asociándolo al usuario.
+        try:
+            # Intentamos crear el usuario.
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password
+            )
+        except IntegrityError:
+            # Si el usuario ya existe (porque el username es único),
+            # lanzamos un error de validación claro que el frontend puede mostrar.
+            raise serializers.ValidationError({
+                'username': ['Ya existe un usuario con este nombre. Por favor, elige otro.']
+            })
+        
+        # Si el usuario se crea con éxito, creamos el objeto Client, asociándolo al usuario.
         client = Client.objects.create(user=user, **validated_data)
         return client
 

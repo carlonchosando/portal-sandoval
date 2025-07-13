@@ -7,6 +7,7 @@ import TaskList from '../components/TaskList';
 import AddClientForm from '../components/AddClientForm';
 import AddProjectForm from '../components/AddProjectForm';
 import EditClientForm from '../components/EditClientForm'; // 1. Importamos el formulario de edición
+import './TaskSection.css'; // Importamos los nuevos estilos para la sección de tareas
 import Collapsible from '../components/Collapsible';
 
 function Dashboard() {
@@ -15,9 +16,12 @@ function Dashboard() {
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null);  
   const [archivedClients, setArchivedClients] = useState([]); // Nuevo estado para archivados
   const [editingClient, setEditingClient] = useState(null); // 2. Estado para saber a quién editamos
+  const [showTasks, setShowTasks] = useState(false); // Estado para controlar la visibilidad de las tareas
+  const [showProjects, setShowProjects] = useState(false); // Estado para controlar la visibilidad de los proyectos
+  const [showClients, setShowClients] = useState(false); // Estado para controlar la visibilidad de los clientes
 
   // --- LÓGICA DE CARGA DE DATOS ---
   // Movemos fetchData fuera del useEffect para poder llamarla desde otros manejadores.
@@ -51,8 +55,11 @@ function Dashboard() {
 
   // --- MANEJADORES DE EVENTOS ---
   const handleClientAdded = async (newClientData) => {
+    // La creación de clientes envía JSON, así que lo especificamos.
     try {
-      const response = await apiClient.post('clients/', newClientData);
+      const response = await apiClient.post('clients/', newClientData, {
+        headers: { 'Content-Type': 'application/json' }
+      });
       setClients(prevClients => [response.data, ...prevClients]);
     } catch (err) {
       console.error("Error al añadir cliente:", err.response?.data || err.message);
@@ -101,6 +108,7 @@ function Dashboard() {
 
   const handleProjectAdded = async (newProjectFormData) => {
     try {
+      // Este ya estaba bien, pero lo revisamos para confirmar. Envía form-data.
       const response = await apiClient.post('projects/', newProjectFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -115,6 +123,7 @@ function Dashboard() {
 
   const handleTaskAdded = async (newTaskFormData) => {
     try {
+      // Este es el que funcionaba bien porque siempre fue explícito.
       const response = await apiClient.post('tasks/', newTaskFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -177,21 +186,52 @@ function Dashboard() {
       <div className="column">
         {/* Pasamos la prop onUpdateTask que faltaba */}
         <div className="dashboard-panel">
-          <TaskList tasks={tasks} onToggleStatus={handleTaskStatusChange} onDeleteTask={handleDeleteTask} onUpdateTask={handleTaskUpdate} />
-        </div>
-        <div className="dashboard-panel">
-          {/* Ahora el formulario de edición aparecerá aquí cuando sea necesario */}
-          <ClientList clients={clients} onEdit={setEditingClient} onDelete={handleDeleteClient} />
-          {editingClient && (
-            <EditClientForm
-              client={editingClient}
-              onUpdate={handleUpdateClient}
-              onCancel={() => setEditingClient(null)} // Para el botón de cancelar
+          <div className="tasks-header">
+            <h2>Lista de Tareas</h2>
+            <button onClick={() => setShowTasks(!showTasks)} className="toggle-button">
+              {showTasks ? 'Ocultar' : 'Mostrar'}
+            </button>
+          </div>
+          {showTasks && (
+            <TaskList
+              tasks={tasks}
+              onToggleStatus={handleTaskStatusChange}
+              onDeleteTask={handleDeleteTask}
+              onUpdateTask={handleTaskUpdate}
+              showProjectName={true} // Mostramos el nombre del proyecto en el dashboard
             />
           )}
         </div>
         <div className="dashboard-panel">
-          <ProjectList projects={projects} />
+          <div className="tasks-header">
+            <h2>Lista de Clientes</h2>
+            <button onClick={() => setShowClients(!showClients)} className="toggle-button">
+              {showClients ? 'Ocultar' : 'Mostrar'}
+            </button>
+          </div>
+          {showClients && (
+            <>
+              <ClientList clients={clients} onEdit={setEditingClient} onDelete={handleDeleteClient} />
+              {editingClient && (
+                <EditClientForm
+                  client={editingClient}
+                  onUpdate={handleUpdateClient}
+                  onCancel={() => setEditingClient(null)} // Para el botón de cancelar
+                />
+              )}
+            </>
+          )}
+        </div>
+        <div className="dashboard-panel">
+          <div className="tasks-header">
+            <h2>Lista de Proyectos</h2>
+            <button onClick={() => setShowProjects(!showProjects)} className="toggle-button">
+              {showProjects ? 'Ocultar' : 'Mostrar'}
+            </button>
+          </div>
+          {showProjects && (
+            <ProjectList projects={projects} />
+          )}
         </div>
         {/* Nuevo panel para los clientes archivados */}
         <Collapsible title="🗄️ Clientes Archivados">

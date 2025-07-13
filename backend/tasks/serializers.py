@@ -2,41 +2,27 @@ from rest_framework import serializers
 from .models import Task
 from projects.models import Project
 
-class ProjectForTaskSerializer(serializers.ModelSerializer):
-    """Un serializer simple para mostrar info del proyecto dentro de una tarea."""
-    class Meta:
-        model = Project
-        fields = ['id', 'name']
-
 class TaskSerializer(serializers.ModelSerializer):
-    # Por defecto, este campo aceptará un ID para escribir (POST/PUT).
-    # Usaremos to_representation para cambiar cómo se muestra al leer (GET).
-    project = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
+    """
+    Serializer para el modelo Task.
+    Distingue entre lectura (mostrando project_name) y escritura (aceptando project ID).
+    """
+    # Para LEER: Mostramos el nombre del proyecto para simplicidad.
+    project_name = serializers.CharField(source='project.name', read_only=True)
+    # También mostramos el nombre del cliente, que es muy útil en las listas.
+    client_name = serializers.CharField(source='project.client.business_name', read_only=True)
+
+    # Para ESCRIBIR: Aceptamos un simple ID de proyecto.
+    # El campo en el formulario se debe llamar 'project'.
+    project = serializers.PrimaryKeyRelatedField(
+        queryset=Project.objects.all(), write_only=True, label="ID del Proyecto"
+    )
 
     class Meta:
         model = Task
+        # 'project' es para escribir (acepta el ID), los otros son para leer.
         fields = [
-            'id',
-            'project',          # Acepta ID al escribir, muestra objeto al leer.
-            'title',
-            'description',
-            'due_date',
-            'status',
-            'cost',
-            'attachment',
-            'youtube_url',
-            'created_at',
-            'updated_at',
+            'id', 'project', 'project_name', 'client_name', 'title', 'description', 
+            'due_date', 'status', 'cost', 'attachment', 
+            'youtube_url', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at']
-
-    def to_representation(self, instance):
-        """
-        Personaliza la salida del serializer para las peticiones GET.
-        Convierte el 'project' (que por defecto sería solo un ID) en un objeto anidado
-        con los detalles del proyecto.
-        """
-        representation = super().to_representation(instance)
-        # Usamos el ProjectForTaskSerializer para obtener los detalles del proyecto.
-        representation['project'] = ProjectForTaskSerializer(instance.project).data
-        return representation

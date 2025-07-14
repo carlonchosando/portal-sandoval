@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import './App.css';
 import apiClient from './api';
 import Login from './components/Login';
@@ -8,46 +8,47 @@ import ProjectDetail from './pages/ProjectDetail';
 
 function App() {
   const [loginError, setLoginError] = useState(null); // Para errores de login
-
-  // El token de autenticación. Lo leemos de localStorage para mantener la sesión.
-  const [token, setToken] = useState(localStorage.getItem('authToken'));
+  // Usaremos 'accessToken' para ser consistentes con la nueva lógica de api.js
+  const [token, setToken] = useState(localStorage.getItem('accessToken'));
+  const navigate = useNavigate();
 
   // --- LÓGICA DE AUTENTICACIÓN ---
   const handleLogin = async (username, password) => {
     try {
-      // Ahora podemos usar nuestro apiClient para todo.
-      // Aunque el interceptor no actuará en esta llamada (porque aún no hay token), está bien.
       const response = await apiClient.post('token/', { username, password });
-      const newToken = response.data.access;
-      localStorage.setItem('authToken', newToken); // Guardamos el token en el navegador
+      
+      // Guardamos AMBOS tokens con nombres claros
+      localStorage.setItem('accessToken', response.data.access);
+      localStorage.setItem('refreshToken', response.data.refresh);
+      
+      setToken(response.data.access);
       setLoginError(null);
-      // Forzamos la recarga de la página. Esta es la solución más simple y robusta.
-      // Al recargar, el nuevo token se leerá de localStorage desde el principio
-      // y toda la aplicación estará correctamente autenticada.
-      window.location.reload();
+      // Usamos navigate para una transición más suave, típico de una SPA
+      navigate('/');
+
     } catch (err) {
       console.error("Error de login:", err);
-      // Hacemos el manejo de errores más específico.
       if (err.response && err.response.status === 401) {
-        // Error 401 significa específicamente "Unauthorized".
         setLoginError('Usuario o contraseña incorrectos.');
       } else {
-        // Cualquier otro error (como el de red) se mostrará de forma genérica.
         setLoginError('Error de red o del servidor. Revisa la consola del navegador.');
       }
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken'); // Borramos el token
-    // Forzamos la recarga para que el estado de autenticación se limpie en toda la app.
-    window.location.href = '/';
+    // Borramos ambos tokens
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    setToken(null);
+    navigate('/login');
   };
 
   // --- RENDERIZADO CONDICIONAL ---
   // Si no hay token, mostramos la pantalla de Login.
   if (!token) {
-    return <Login onLogin={handleLogin} error={loginError} />;
+    // Redirigimos todas las rutas al login si no hay token
+    return <Routes><Route path="*" element={<Login onLogin={handleLogin} error={loginError} />} /></Routes>;
   }
 
   // Si hay token, mostramos la aplicación principal.
@@ -63,6 +64,8 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           {/* Creamos una ruta dinámica para los detalles del proyecto */}
           <Route path="/projects/:projectId" element={<ProjectDetail />} />
+          {/* Cualquier otra ruta no definida redirige al dashboard */}
+          <Route path="*" element={<Dashboard />} />
         </Routes>
       </main>
     </div>

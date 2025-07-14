@@ -15,7 +15,7 @@ class TaskSerializer(serializers.ModelSerializer):
     # Para ESCRIBIR: Aceptamos un simple ID de proyecto.
     # El campo en el formulario se debe llamar 'project'.
     project = serializers.PrimaryKeyRelatedField(
-        queryset=Project.objects.all(), write_only=True, label="ID del Proyecto"
+        queryset=Project.objects.all(), write_only=True, label="ID del Proyecto", required=False
     )
 
     class Meta:

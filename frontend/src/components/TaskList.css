@@ -1,0 +1,398 @@
+
+.task-item {
+  display: flex;
+  /* Cambiamos la dirección para apilar el contenido y el formulario de edición */
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0; /* El padding ahora estará en el contenido interno */
+  border-bottom: 1px solid #eee;
+  /* Añadimos un borde izquierdo que cambiaremos de color según el estado */
+  border-left: 5px solid transparent;
+  transition: border-left-color 0.3s ease-in-out;
+}
+
+.task-item-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  transition: background-color 0.2s;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.task-item-content:hover {
+  background-color: #f1f3f5;
+}
+
+/* --- ESTILOS DE ESTADO DE TAREA --- */
+.task-item.status-pendiente {
+  border-left-color: #ffc107; /* Amarillo/Ámbar para Pendiente */
+  background-color: #fffbeb; /* Un fondo crema muy sutil */
+}
+
+.task-item.status-en_progreso {
+  border-left-color: #007bff; /* Azul para En Progreso */
+  background-color: #e7f5ff; /* Un fondo azul muy claro */
+}
+
+.task-item.status-completada {
+  border-left-color: #28a745; /* Verde para Completada */
+  background-color: #e6f9f0; /* Un fondo verde muy claro */
+}
+
+.task-item.status-completada .task-title {
+  text-decoration: line-through;
+  color: #6c757d;
+}
+/* --- FIN DE ESTILOS DE ESTADO --- */
+
+.task-main-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-grow: 1;
+  overflow: hidden;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .task-main-content {
+    width: 100%;
+  }
+}
+
+.task-checkbox {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.task-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #666;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.task-details {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-grow: 1;
+  max-width: 100%;
+}
+
+.task-title {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+@media (max-width: 480px) {
+  .task-title {
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* Espacio entre el nombre del proyecto y el estado */
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .task-meta {
+    width: 100%;
+    gap: 0.5rem;
+  }
+}
+
+.task-status-badge {
+  display: inline-block;
+  padding: 0.2em 0.6em;
+  font-size: 0.75rem;
+  font-weight: 700; /* Hacemos la fuente un poco más gruesa */
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+  text-transform: capitalize; /* Pone en mayúscula la primera letra */
+}
+
+/* Colores para las "píldoras" de estado, consistentes con los fondos */
+.status-badge-pendiente {
+  color: #856404;
+  background-color: #fff3cd;
+}
+
+.status-badge-en_progreso {
+  color: #004085;
+  background-color: #cce5ff;
+}
+
+.status-badge-completada {
+  color: #155724;
+  background-color: #d4edda;
+}
+
+/* --- ESTILOS PARA LA ETIQUETA DE COSTE --- */
+.task-cost-badge {
+  /* Reutilizamos los estilos de la píldora de estado para consistencia */
+  display: inline-block;
+  padding: 0.2em 0.6em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+}
+
+.task-cost-badge.no-cost {
+  color: #6c757d; /* Gris sutil */
+  background-color: #f8f9fa; /* Fondo muy claro */
+  border: 1px solid #dee2e6;
+}
+
+.task-cost-badge.has-cost {
+  color: #155724; /* Mismo color que la píldora de completado */
+  background-color: #d4edda;
+}
+
+.task-project-name {
+  font-size: 0.8rem;
+  color: #777;
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .task-actions {
+    margin-top: 0.5rem;
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+.task-links {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  border-right: 1px solid #ddd;
+  padding-right: 1.2rem;
+  margin-right: 0.25rem;
+}
+
+@media (max-width: 480px) {
+  .task-links {
+    gap: 1rem;
+    padding-right: 1rem;
+    border-right: none;
+    margin-right: 0;
+    width: auto;
+  }
+}
+.task-button:hover {
+  color: #000;
+}
+
+.task-button.delete:hover {
+  color: #dc3545;
+}
+
+.task-button.edit:hover {
+  color: #007bff;
+}
+
+.task-button.save:hover {
+  color: #28a745;
+}
+
+.task-button.cancel:hover {
+  color: #6c757d;
+}
+
+.task-link-icon {
+  font-size: 1.4rem;
+  color: #555;
+  transition: color 0.2s, transform 0.2s;
+  display: flex;
+}
+
+.task-link-icon:hover {
+  transform: scale(1.2);
+}
+
+.task-link-icon.youtube:hover {
+  color: #ff0000;
+}
+
+/* --- ESTILOS PARA EL NUEVO FORMULARIO DE EDICIÓN --- */
+.task-edit-container {
+  width: 100%;
+  padding: 1rem 1rem 1.5rem 1rem;
+  box-sizing: border-box;
+  background-color: #f8f9fa;
+  animation: fadeIn 0.3s ease-in-out;
+  overflow-x: hidden;
+}
+
+@media (max-width: 480px) {
+  .task-edit-container {
+    padding: 0.75rem 0.75rem 1.25rem 0.75rem;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.task-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.edit-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.form-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.form-button.save {
+  background-color: #007bff;
+  color: white;
+}
+
+.form-button.save:hover {
+  background-color: #0056b3;
+}
+
+.form-button.cancel {
+  background-color: #f1f1f1;
+  color: #333;
+}
+
+.form-button.cancel:hover {
+  background-color: #e0e0e0;
+}
+.current-attachment {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.current-attachment a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.current-attachment a:hover {
+  text-decoration: underline;
+}
+
+.remove-attachment-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+/* Reglas responsive adicionales */
+@media (max-width: 480px) {
+  .task-status-badge,
+  .task-cost-badge {
+    font-size: 0.7rem;
+    padding: 0.15em 0.5em;
+  }
+  
+  .task-button {
+    padding: 0.2rem;
+  }
+  
+  .task-link-icon {
+    font-size: 1.2rem;
+  }
+  
+  .form-button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+  
+  .form-control {
+    font-size: 16px; /* Evita el zoom automático en iOS */
+  }
+}

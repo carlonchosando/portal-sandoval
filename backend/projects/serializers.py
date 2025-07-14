@@ -3,7 +3,7 @@ from .models import Project
 from clients.serializers import ClientSerializer
 from clients.models import Client
 from tasks.models import Task
-from django.db.models import Sum
+from django.db.models import Sum, Count, Case, When, IntegerField, Q
 from decimal import Decimal
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -23,6 +23,8 @@ class ProjectSerializer(serializers.ModelSerializer):
     extra_cost = serializers.SerializerMethodField()
     total_cost = serializers.SerializerMethodField()
     task_count = serializers.SerializerMethodField()
+    tasks_with_cost_count = serializers.SerializerMethodField()
+    tasks_without_cost_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Project
@@ -30,6 +32,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'client', 'client_id', 'description', 'status', 
             'initial_cost', 'extra_cost', 'total_cost', 'task_count',
+            'tasks_with_cost_count', 'tasks_without_cost_count',
             'created_at'
         ]
 
@@ -55,3 +58,15 @@ class ProjectSerializer(serializers.ModelSerializer):
         Cuenta cuántas tareas están asociadas a este proyecto.
         """
         return obj.tasks.count()
+        
+    def get_tasks_with_cost_count(self, obj):
+        """
+        Cuenta cuántas tareas con coste (mayor que 0) están asociadas a este proyecto.
+        """
+        return obj.tasks.filter(cost__gt=0).count()
+        
+    def get_tasks_without_cost_count(self, obj):
+        """
+        Cuenta cuántas tareas sin coste (igual a 0) están asociadas a este proyecto.
+        """
+        return obj.tasks.filter(cost=0).count()

@@ -1,6 +1,9 @@
 .App {
   text-align: center;
   font-family: sans-serif;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .App-header {
@@ -14,9 +17,11 @@
 }
 
 main {
+  width: 100%;
   max-width: 800px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 10px;
+  box-sizing: border-box;
 }
 
 ul {
@@ -34,6 +39,9 @@ li {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  overflow-x: hidden;
+  word-break: break-word;
 }
 
 .item-main-info {
@@ -57,22 +65,24 @@ li {
 
 .form-container form input {
   display: block;
-  width: calc(100% - 20px);
+  width: 100%;
   padding: 10px;
   margin-bottom: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  box-sizing: border-box;
 }
 
 .form-container form textarea {
   display: block;
-  width: calc(100% - 20px);
+  width: 100%;
   padding: 10px;
   margin-bottom: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-family: sans-serif;
   min-height: 80px;
+  box-sizing: border-box;
 }
 
 .form-container form button {
@@ -280,15 +290,35 @@ li {
 .layout-grid {
   display: grid;
   /* Por defecto, 2 columnas con la primera más estrecha */
-  grid-template-columns: minmax(320px, 1fr) 2fr;
-  gap: 2rem;
-  padding: 1rem;
+  grid-template-columns: minmax(280px, 1fr) 2fr;
+  gap: 1.5rem;
+  padding: 0.5rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-/* Media Query para pantallas de tablet y móviles */
+/* Media Query para pantallas de tablet */
 @media (max-width: 992px) {
   .layout-grid {
     grid-template-columns: 1fr; /* Cambiamos a una sola columna */
+    gap: 1rem;
+  }
+}
+
+/* Media Query para pantallas móviles pequeñas */
+@media (max-width: 480px) {
+  .layout-grid {
+    padding: 0.25rem;
+    gap: 0.75rem;
+  }
+  
+  main {
+    padding: 0 5px;
+  }
+  
+  .App-header {
+    padding: 10px;
   }
 }
 
@@ -344,6 +374,15 @@ li {
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+@media (max-width: 480px) {
+  .dashboard-panel {
+    padding: 1rem;
+  }
 }
 
 /* --- Estilos Mejorados para el Formulario de Edición --- */
@@ -418,7 +457,17 @@ li {
 .item-actions {
   display: flex;
   gap: 0.5rem; /* Espacio entre botones */
-  margin-left: 1rem;
+  margin-left: 0.5rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .item-actions {
+    margin-left: 0;
+    margin-top: 0.5rem;
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 
 .button-edit, .button-delete, .button-restore {
@@ -470,4 +519,48 @@ li {
   align-self: flex-start; /* Para que no ocupe todo el ancho */
   display: flex;
   gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* --- Reglas adicionales para mejorar la responsividad --- */
+.task-main-content, .task-actions, .task-details {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.task-item-content {
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .task-actions {
+    margin-top: 0.75rem;
+    justify-content: flex-start;
+  }
+  
+  .task-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  h1, h2, h3 {
+    font-size: 1.2em;
+    word-break: break-word;
+  }
+  
+  .task-title {
+    font-size: 1em;
+    word-break: break-word;
+  }
+  
+  .collapsible-header {
+    font-size: 0.95rem;
+    padding: 12px 15px;
+  }
+  
+  .form-row {
+    flex-direction: column;
+  }
 }

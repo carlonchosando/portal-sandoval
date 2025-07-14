@@ -57,10 +57,10 @@ function Dashboard() {
   const handleClientAdded = async (newClientData) => {
     // La creación de clientes envía JSON, así que lo especificamos.
     try {
-      const response = await apiClient.post('clients/', newClientData, {
+      await apiClient.post('clients/', newClientData, {
         headers: { 'Content-Type': 'application/json' }
       });
-      setClients(prevClients => [response.data, ...prevClients]);
+      fetchData(); // Unificamos la lógica: siempre refrescamos los datos desde el servidor.
     } catch (err) {
       console.error("Error al añadir cliente:", err.response?.data || err.message);
       // Podríamos propagar el error para mostrarlo en el formulario
@@ -71,12 +71,30 @@ function Dashboard() {
   // 3. Lógica para actualizar un cliente
   const handleUpdateClient = async (clientId, updatedData) => {
     try {
+      // Actualización optimista para mejor experiencia de usuario
+      const clientToUpdate = clients.find(c => c.id === clientId);
+      if (clientToUpdate) {
+        const optimisticClient = { ...clientToUpdate, ...updatedData };
+        
+        // Actualizamos localmente primero
+        setClients(prevClients => prevClients.map(client => 
+          client.id === clientId ? optimisticClient : client
+        ));
+      }
+      
+      // Enviamos al backend
       const response = await apiClient.patch(`clients/${clientId}/`, updatedData);
-      // Actualizamos el cliente en la lista localmente para no recargar todo
-      setClients(prevClients => prevClients.map(client => (client.id === clientId ? response.data : client)));
+      
+      // Actualizamos con los datos del servidor
+      setClients(prevClients => prevClients.map(client => 
+        client.id === clientId ? response.data : client
+      ));
+      
       setEditingClient(null); // Cerramos el formulario modal
     } catch (err) {
       console.error("Error al actualizar cliente:", err.response?.data || err.message);
+      // Revertir cambios optimistas
+      alert('Error al actualizar el cliente. Inténtalo de nuevo.');
       throw err; // Propagamos el error para que el formulario de edición lo muestre
     }
   };
@@ -85,10 +103,24 @@ function Dashboard() {
     // El texto ahora es "archivar"
     if (window.confirm('¿Estás seguro de que quieres archivar este cliente? Podrás restaurarlo más tarde.')) {
       try {
+        // Encontrar el cliente a archivar
+        const clientToArchive = clients.find(c => c.id === clientId);
+        
+        if (clientToArchive) {
+          // Actualizar localmente primero - quitar de la lista activa
+          setClients(prevClients => prevClients.filter(client => client.id !== clientId));
+          
+          // Añadir a archivados optimistamente
+          setArchivedClients(prev => [...prev, {...clientToArchive, archived: true}]);
+        }
+        
+        // Enviar al backend
         await apiClient.delete(`clients/${clientId}/`); // La llamada a la API no cambia
-        fetchData(); // Recargamos todos los datos para que el cliente se mueva a la lista de archivados
       } catch (err) {
         console.error("Error al archivar cliente:", err.response?.data || err.message);
+        alert("No se pudo archivar el cliente. Inténtalo de nuevo.");
+        // Revertir cambios si hay error
+        fetchData();
       }
     }
   };
@@ -96,52 +128,172 @@ function Dashboard() {
   const handleRestoreClient = async (clientId) => {
     if (window.confirm('¿Restaurar este cliente a la lista de activos?')) {
       try {
-        // Llamamos al nuevo endpoint 'restore' que creamos en el backend
+        // Encontrar el cliente a restaurar
+        const clientToRestore = archivedClients.find(c => c.id === clientId);
+        
+        if (clientToRestore) {
+          // Actualizar localmente - quitar de archivados
+          setArchivedClients(prev => prev.filter(client => client.id !== clientId));
+          
+          // Añadir a activos
+          const restoredClient = {...clientToRestore, archived: false};
+          setClients(prev => [...prev, restoredClient]);
+        }
+        
+        // Llamamos al endpoint 'restore' en el backend
         await apiClient.post(`clients/${clientId}/restore/`);
-        fetchData(); // Recargamos todos los datos para ver el cambio
       } catch (err) {
         console.error("Error al restaurar cliente:", err.response?.data || err.message);
         alert("No se pudo restaurar el cliente.");
+        // Revertir cambios en caso de error
+        fetchData();
       }
     }
   };
 
   const handleProjectAdded = async (newProjectFormData) => {
     try {
-      // Este ya estaba bien, pero lo revisamos para confirmar. Envía form-data.
+      // Enviar al backend
       const response = await apiClient.post('projects/', newProjectFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      setProjects(prevProjects => [response.data, ...prevProjects]);
+      
+      // Actualizar localmente con la respuesta del servidor
+      // Ya que no podemos ver exactamente qué datos hay en el FormData,
+      // usamos la respuesta completa del servidor para tener todos los campos
+      setProjects(prevProjects => [...prevProjects, response.data]);
+      
+      // Actualizar las referencias del cliente si es necesario
+      // No necesitamos recargar todo
     } catch (err) {
       console.error("Error al añadir proyecto:", err.response?.data || err.message);
+      alert('Error al crear el proyecto. Inténtalo de nuevo.');
       throw err;
     }
   };
 
   const handleTaskAdded = async (newTaskFormData) => {
     try {
-      // Este es el que funcionaba bien porque siempre fue explícito.
+      // Enviar al backend
       const response = await apiClient.post('tasks/', newTaskFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      setTasks(prevTasks => [response.data, ...prevTasks]);
+      
+      // Actualizar localmente con la respuesta del servidor
+      setTasks(prevTasks => [...prevTasks, response.data]);
+      
+      // Actualizar el costo del proyecto asociado si es necesario
+      // Esto es un poco más complejo porque afecta a los totales del proyecto
+      // Una opción sería actualizar solo ese proyecto específico
+      const projectId = response.data.project;
+      if (projectId) {
+        // Obtener el proyecto actualizado para tener los costes correctos
+        const updatedProject = await apiClient.get(`projects/${projectId}/`);
+        // Actualizar solo ese proyecto en el estado
+        setProjects(prevProjects => prevProjects.map(p => 
+          p.id === projectId ? updatedProject.data : p
+        ));
+      }
     } catch (err) {
       console.error("Error al añadir tarea:", err.response?.data || err.message);
+      alert('Error al crear la tarea. Inténtalo de nuevo.');
       throw err;
     }
   };
 
   const handleTaskUpdate = async (taskId, updatedData) => {
     try {
-      const response = await apiClient.patch(`tasks/${taskId}/`, updatedData);
-      setTasks(prevTasks => prevTasks.map(task => (task.id === taskId ? response.data : task)));
+      // Encontrar la tarea actual para actualización optimista
+      const taskToUpdate = tasks.find(t => t.id === taskId);
+      const projectId = taskToUpdate?.project;
+      
+      // Crear una copia optimista de la tarea actualizada
+      if (taskToUpdate) {
+        // Creamos una versión optimista con los cambios
+        const optimisticTask = { ...taskToUpdate };
+        
+        // Aplicamos los cambios de los campos de texto
+        for (const key in updatedData) {
+          if (key !== 'attachment') { // Excluimos attachment para la actualización optimista
+            optimisticTask[key] = updatedData[key];
+          }
+        }
+        
+        // Actualizamos inmediatamente en la UI
+        setTasks(prevTasks => prevTasks.map(task => 
+          task.id === taskId ? optimisticTask : task
+        ));
+      }
+      
+      // Para poder enviar archivos, necesitamos usar FormData, replicando la lógica de creación.
+      const formData = new FormData();
+
+      // Recorremos los datos actualizados y los añadimos al FormData.
+      // Esto maneja tanto campos de texto como el nuevo archivo adjunto.
+      for (const key in updatedData) {
+        // Nos aseguramos de no enviar valores 'null' o 'undefined' que puedan dar problemas.
+        // Si el valor es un string vacío, lo enviamos para que el backend pueda borrar el campo (ej. attachment).
+        if (updatedData[key] !== null && updatedData[key] !== undefined) {
+          // Procesamiento especial para el campo cost para garantizar que se envíe correctamente
+          if (key === 'cost') {
+            // Asegurar que se envía como string con formato decimal (backend espera esto para DecimalField)
+            const costValue = parseFloat(updatedData[key]);
+            if (!isNaN(costValue)) {
+              formData.append(key, costValue.toFixed(2));
+            } else {
+              formData.append(key, '0.00');
+            }
+          } else {
+            formData.append(key, updatedData[key]);
+          }
+        }
+      }
+
+      // Debugeamos el FormData para verificar lo que se está enviando
+      console.log('Enviando datos de la tarea:', Object.fromEntries(formData.entries()));
+
+      // Enviar al backend
+      const response = await apiClient.patch(`tasks/${taskId}/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      // Actualizar con los datos del servidor
+      setTasks(prevTasks => prevTasks.map(task => 
+        task.id === taskId ? response.data : task
+      ));
+      
+      // Si hay proyecto asociado y si actualizamos campos como cost que afectan al proyecto
+      if (projectId && (updatedData.cost !== undefined || updatedData.status !== undefined)) {
+        // Obtener el proyecto actualizado para tener los costes correctos
+        const updatedProject = await apiClient.get(`projects/${projectId}/`);
+        // Actualizar solo ese proyecto en el estado
+        setProjects(prevProjects => prevProjects.map(p => 
+          p.id === projectId ? updatedProject.data : p
+        ));
+      }
+      
+      return response.data; // Devolvemos los datos actualizados
     } catch (err) {
       console.error("Error al actualizar la tarea:", err);
+      alert('Error al actualizar la tarea. Inténtalo de nuevo.');
+      // Si hay error, podríamos recargar la tarea original
+      if (taskId) {
+        try {
+          const originalTask = await apiClient.get(`tasks/${taskId}/`);
+          setTasks(prevTasks => prevTasks.map(task => 
+            task.id === taskId ? originalTask.data : task
+          ));
+        } catch (refreshErr) {
+          // Si falla incluso recuperar la tarea, recargamos todo como último recurso
+          console.error("Error al recuperar estado original de la tarea:", refreshErr);
+        }
+      }
       throw err; // Propagar el error para que el componente hijo (TaskList) pueda manejarlo
     }
   };
@@ -149,20 +301,62 @@ function Dashboard() {
   const handleTaskStatusChange = async (taskToUpdate) => {
     const newStatus = taskToUpdate.status === 'PENDIENTE' ? 'COMPLETADA' : 'PENDIENTE';
     try {
+      // Actualización optimista inmediata - mucho mejor experiencia de usuario
+      const optimisticTask = { ...taskToUpdate, status: newStatus };
+      
+      // Actualizamos el estado local inmediatamente
+      setTasks(prevTasks => prevTasks.map(task => 
+        task.id === taskToUpdate.id ? optimisticTask : task
+      ));
+      
+      // Enviamos la petición al backend en segundo plano
       const response = await apiClient.patch(`tasks/${taskToUpdate.id}/`, { status: newStatus });
-      setTasks(prevTasks => prevTasks.map(task => task.id === taskToUpdate.id ? response.data : task));
+      
+      // Confirmamos con los datos del servidor (solo esta tarea específica)
+      setTasks(prevTasks => prevTasks.map(task => 
+        task.id === taskToUpdate.id ? response.data : task
+      ));
+      
+      // Si necesitamos actualizar algún otro estado relacionado con esta tarea
+      // lo haríamos aquí, pero sin recargar toda la página
     } catch (err) {
       console.error("Error al actualizar la tarea:", err);
+      
+      // Revertimos al estado original en caso de error
+      setTasks(prevTasks => prevTasks.map(task => 
+        task.id === taskToUpdate.id ? {...task, status: taskToUpdate.status} : task
+      ));
+      
+      alert('No se pudo actualizar el estado de la tarea. Inténtalo de nuevo.');
     }
   };
 
   const handleDeleteTask = async (taskId) => {
     try {
-      await apiClient.delete(`tasks/${taskId}/`);
-      // Actualizamos el estado para que la tarea desaparezca de la UI inmediatamente.
+      // Encontrar la tarea y su proyecto asociado antes de eliminarla
+      const taskToDelete = tasks.find(t => t.id === taskId);
+      const projectId = taskToDelete?.project;
+      
+      // Actualizar estado local primero - eliminar la tarea de la lista
       setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+      
+      // Enviar al backend
+      await apiClient.delete(`tasks/${taskId}/`);
+      
+      // Si hay proyecto asociado, actualizar sus costes
+      if (projectId) {
+        // Obtener el proyecto actualizado para tener los costes correctos
+        const updatedProject = await apiClient.get(`projects/${projectId}/`);
+        // Actualizar solo ese proyecto en el estado
+        setProjects(prevProjects => prevProjects.map(p => 
+          p.id === projectId ? updatedProject.data : p
+        ));
+      }
     } catch (err) {
       console.error("Error al eliminar la tarea:", err);
+      alert('Error al eliminar la tarea. Inténtalo de nuevo.');
+      // Revertir cambios optimistas en caso de error
+      fetchData();
     }
   };
 
@@ -211,14 +405,14 @@ function Dashboard() {
           </div>
           {showClients && (
             <>
-              <ClientList clients={clients} onEdit={setEditingClient} onDelete={handleDeleteClient} />
-              {editingClient && (
-                <EditClientForm
-                  client={editingClient}
-                  onUpdate={handleUpdateClient}
-                  onCancel={() => setEditingClient(null)} // Para el botón de cancelar
-                />
-              )}
+              <ClientList 
+                clients={clients} 
+                onEdit={setEditingClient} 
+                onDelete={handleDeleteClient}
+                editingClient={editingClient}
+                onUpdateClient={handleUpdateClient}
+                onCancelEdit={() => setEditingClient(null)}
+              />
             </>
           )}
         </div>

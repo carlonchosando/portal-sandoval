@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import apiClient from '../api';
 import TaskList from '../components/TaskList';
 import AddTaskForm from '../components/AddTaskForm';
+import './ProjectDetail.css'; // Importamos el nuevo CSS
 
 function ProjectDetail() {
   const { projectId } = useParams(); // Obtiene el ID del proyecto de la URL
@@ -10,51 +11,76 @@ function ProjectDetail() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showAddTaskForm, setShowAddTaskForm] = useState(false); // Estado para controlar visibilidad del formulario
+  const [isUpdatingTasks, setIsUpdatingTasks] = useState(false); // Estado para controlar actualizaciones parciales
+  const [scrollPosition, setScrollPosition] = useState(0); // Guardar la posición del scroll
 
-  // Extraemos la lógica de fetching de tareas para poder reutilizarla.
-  const fetchTasks = async () => {
+  // Referencia para mantener el elemento que debemos mantener a la vista
+  const taskListRef = React.useRef(null);
+  
+  // Función para guardar la posición actual del scroll y el elemento relevante
+  const saveScrollPosition = useCallback(() => {
+    setScrollPosition(window.scrollY);
+  }, []);
+
+  // Función para restaurar la posición del scroll de manera más confiable
+  const restoreScrollPosition = useCallback(() => {
+    // Restauramos exactamente a la misma posición Y
+    if (scrollPosition > 0) {
+      window.scrollTo({
+        top: scrollPosition,
+        behavior: 'auto' // Instantáneo para evitar animaciones que puedan confundir
+      });
+    }
+  }, [scrollPosition]);
+
+  // Creamos una única función de carga de datos, envuelta en useCallback para optimización.
+  // Esta función recargará tanto los detalles del proyecto como su lista de tareas.
+  const fetchProjectData = useCallback(async () => {
     try {
+      saveScrollPosition(); // Guardamos la posición actual del scroll
+      setLoading(true);
+      setError(null);
+      // Obtenemos los detalles del proyecto
+      const projectResponse = await apiClient.get(`/projects/${projectId}/`);
+      setProject(projectResponse.data);
+      // También cargamos las tareas del proyecto
       const tasksResponse = await apiClient.get(`/projects/${projectId}/tasks/`);
       setTasks(tasksResponse.data);
     } catch (err) {
-      console.error("Error al cargar las tareas:", err);
-      setError('No se pudieron cargar las tareas del proyecto.');
+      console.error("Error al cargar datos del proyecto:", err);
+      setError("No se pudo cargar la información del proyecto. Por favor, inténtalo de nuevo.");
+    } finally {
+      setLoading(false);
+      // Restauramos la posición del scroll con varios intentos para asegurar que funcione
+      // después de que el DOM se haya actualizado completamente
+      setTimeout(restoreScrollPosition, 0);
+      setTimeout(restoreScrollPosition, 50);
+      setTimeout(restoreScrollPosition, 150);
     }
-  };
+  }, [projectId, restoreScrollPosition, saveScrollPosition]); // Esta función se recalcula solo si el projectId cambia.
 
   useEffect(() => {
-    const fetchProjectData = async () => {
-      setLoading(true);
-      try {
-        const projectResponse = await apiClient.get(`/projects/${projectId}/`);
-        setProject(projectResponse.data);
-        await fetchTasks(); // Usamos la nueva función para cargar las tareas
-        setError(null);
-      } catch (err) {
-        setError('No se pudieron cargar los datos del proyecto.');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProjectData();
-  }, [projectId]); // Se ejecuta cada vez que el projectId de la URL cambia
+  }, [fetchProjectData]);
 
   // --- MANEJADORES DE EVENTOS ---
 
   // Se llama desde AddTaskForm cuando se envía el formulario.
   const handleAddTask = async (taskFormData) => {
     try {
-      // 1. Creamos la nueva tarea usando la ruta anidada del proyecto.
-      // Esto es más lógico y seguro, ya que el backend asociará la tarea al proyecto correcto.
-      await apiClient.post(`/projects/${projectId}/tasks/`, taskFormData, {
+      // Enviamos los datos al backend
+      const response = await apiClient.post(`/projects/${projectId}/tasks/`, taskFormData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      // 2. Volvemos a pedir la lista de tareas actualizada.
-      // Esto es más robusto que añadir la tarea manualmente al estado
-      // ya que nos aseguramos de que los datos son 100% consistentes con el servidor.
-      await fetchTasks();
+      
+      // Actualización local: agregamos la nueva tarea al estado actual
+      // sin necesidad de volver a cargar toda la página
+      setTasks(prevTasks => [...prevTasks, response.data]);
+      
+      // También podríamos actualizar el proyecto si es necesario
+      // (por ejemplo, si hay contadores que necesitan actualizarse)
+      // Pero no es necesario recargar todo
     } catch (err) {
       console.error("Error al crear la tarea:", err);
       // Lanzamos un error para que el componente del formulario pueda mostrar un mensaje.
@@ -66,58 +92,172 @@ function ProjectDetail() {
   const handleTaskStatusChange = async (taskToUpdate) => {
     const newStatus = taskToUpdate.status === 'PENDIENTE' ? 'COMPLETADA' : 'PENDIENTE';
     try {
+      // Ya no necesitamos todo el aparato de guardar posición de scroll
+      // porque no vamos a recargar toda la página
+      
+      // Actualización optimista para efecto inmediato
+      const optimisticTask = { ...taskToUpdate, status: newStatus };
+      setTasks(prevTasks => prevTasks.map(task => 
+        task.id === taskToUpdate.id ? optimisticTask : task
+      ));
+      
+      // Hacemos la petición al backend en segundo plano
       const response = await apiClient.patch(`/tasks/${taskToUpdate.id}/`, { status: newStatus });
-      setTasks(prevTasks => prevTasks.map(task => task.id === taskToUpdate.id ? response.data : task));
+      
+      // Confirmamos con los datos del servidor (solo actualizamos esta tarea específica)
+      setTasks(prevTasks => prevTasks.map(task => 
+        task.id === taskToUpdate.id ? response.data : task
+      ));
     } catch (err) {
       console.error("Error al actualizar la tarea:", err);
+      // Revertimos al estado original en caso de error
+      setTasks(prevTasks => prevTasks.map(task => 
+        task.id === taskToUpdate.id ? {...task, status: taskToUpdate.status} : task
+      ));
+      // Mostrar notificación de error al usuario
+      alert('No se pudo actualizar el estado de la tarea. Inténtalo de nuevo.');
     }
   };
 
   // Se llama desde TaskList cuando se guarda la edición de una tarea.
   const handleTaskUpdate = async (taskId, updatedData) => {
-    try {
-      const response = await apiClient.patch(`/tasks/${taskId}/`, updatedData);
-      // Actualizamos el estado local para reflejar el cambio del título
-      setTasks(prevTasks => prevTasks.map(task => (task.id === taskId ? response.data : task)));
+     try {
+      // Actualizamos de forma optimista en la UI primero
+      // Creamos una versión local actualizada para mostrar inmediatamente
+      setTasks(prevTasks => prevTasks.map(task => {
+        if (task.id === taskId) {
+          // Creamos una copia local de la tarea con los datos actualizados
+          const updatedTask = {...task};
+          Object.keys(updatedData).forEach(key => {
+            if (updatedData[key] !== null && updatedData[key] !== undefined) {
+              updatedTask[key] = updatedData[key];
+            }
+          });
+          return updatedTask;
+        }
+        return task;
+      }));
+      
+      // Lógica para enviar el formulario con archivos al backend
+      const formData = new FormData();
+      for (const key in updatedData) {
+        if (updatedData[key] !== null && updatedData[key] !== undefined) {
+          // Procesamiento especial para el campo cost (como en Dashboard)
+          if (key === 'cost') {
+            // Aseguramos que el costo se envía como un número decimal con formato correcto
+            const costValue = parseFloat(updatedData[key]);
+            const formattedCost = isNaN(costValue) ? '0.00' : costValue.toFixed(2);
+            formData.append(key, formattedCost);
+          } else {
+            formData.append(key, updatedData[key]);
+          }
+        }
+      }
+
+      // Enviamos al backend
+      const response = await apiClient.patch(`/tasks/${taskId}/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      // Actualizamos con los datos que devolvió el servidor
+      setTasks(prevTasks => prevTasks.map(task => 
+        task.id === taskId ? response.data : task
+      ));
     } catch (err) {
       console.error("Error al actualizar la tarea:", err);
-      throw new Error('No se pudo actualizar la tarea.'); // Para que el componente hijo sepa del error
+      // Revertir cambios optimistas
+      alert('No se pudo actualizar la tarea. Inténtalo de nuevo.');
+      throw new Error('No se pudo actualizar la tarea.');
     }
   };
 
   const handleDeleteTask = async (taskId) => {
     try {
-      await apiClient.delete(`/tasks/${taskId}/`);
+      // Eliminamos la tarea localmente primero (actualización optimista)
       setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+      
+      // Luego enviamos la petición al backend
+      await apiClient.delete(`/tasks/${taskId}/`);
+      
+      // No necesitamos recargar toda la página, ya actualizamos el estado local
     } catch (err) {
       console.error("Error al eliminar la tarea:", err);
+      // Revertimos la eliminación local si hubo error
+      alert('No se pudo eliminar la tarea. Inténtalo de nuevo.');
+      await fetchProjectData(); // Solo en caso de error recargamos todos los datos
     }
   };
 
-  if (loading) return <div>Cargando proyecto...</div>;
+  if (loading) return <div className="loading-container">Cargando proyecto...</div>;
   if (error) return <div className="error-message">{error}</div>;
-  if (!project) return <div>Proyecto no encontrado.</div>;
+  if (!project) return <div className="not-found-message">Proyecto no encontrado.</div>;
+
+  // Función para normalizar el estado para atributos data-*
+  const normalizeStatus = (status) => {
+    if (!status) return "NUEVO";
+    // Eliminar acentos, convertir a mayúsculas y reemplazar espacios por guiones bajos
+    return status.normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toUpperCase()
+      .replace(/ /g, "_");
+  };
 
   return (
-    <div className="project-detail-container">
-      <Link to="/" className="back-link">&larr; Volver al Dashboard</Link>
-      <h1>{project.name}</h1>
-      <p className="project-client">Cliente: {project.client.business_name}</p>
-      <p className="project-status-detail">Estado: <strong>{project.status}</strong></p>
-      <div className="project-description">
-        <h3>Descripción</h3>
-        <p>{project.description || 'No hay descripción para este proyecto.'}</p>
+    <div className="project-detail-container" data-status={normalizeStatus(project.status)}>
+      <div className="project-header-wrapper">
+        <div className="project-header-top">
+          <Link to="/" className="back-link">Volver al Dashboard</Link>
+          <div className="project-status-badge">{project.status}</div>
+        </div>
+        
+        <div className="project-header-main">
+          <div className="project-title-section">
+            <h1>{project.name}</h1>
+            <p className="project-client">{project.client.business_name}</p>
+          </div>
+        </div>
+
+        <div className="project-description">
+          <div className="description-content">
+            <h3>Descripción del Proyecto</h3>
+            <p>{project.description || 'No hay descripción para este proyecto.'}</p>
+          </div>
+        </div>
       </div>
       <hr className="separator" />
-      {/* Añadimos el formulario para crear tareas */}
-      <AddTaskForm projectId={projectId} onTaskAdded={handleAddTask} />
-      <TaskList
-        tasks={tasks}
-        onToggleStatus={handleTaskStatusChange}
-        onUpdateTask={handleTaskUpdate}
-        onDeleteTask={handleDeleteTask}
-        showProjectName={false} // En esta vista, ya sabemos el proyecto.
-      />
+      {/* Formulario desplegable para crear tareas */}
+      <div className={`form-container add-task-form ${showAddTaskForm ? 'expanded' : 'collapsed'}`}>
+        <div 
+          className="form-header" 
+          onClick={() => setShowAddTaskForm(!showAddTaskForm)}
+        >
+          <h3>Añadir Nueva Tarea</h3>
+          <button 
+            type="button" 
+            className="toggle-form-btn"
+            aria-label={showAddTaskForm ? 'Ocultar formulario' : 'Mostrar formulario'}
+          >
+            <span className={`toggle-icon ${showAddTaskForm ? 'open' : ''}`}>▼</span>
+          </button>
+        </div>
+        <div className="form-content">
+          {showAddTaskForm && <AddTaskForm projectId={projectId} onTaskAdded={handleAddTask} />}
+        </div>
+      </div>
+      <div 
+        ref={taskListRef}
+        className="task-list-wrapper"
+      >
+        <TaskList
+          tasks={tasks}
+          onToggleStatus={handleTaskStatusChange}
+          onUpdateTask={handleTaskUpdate}
+          onDeleteTask={handleDeleteTask}
+          showProjectName={false} // En esta vista, ya sabemos el proyecto.
+        />
+      </div>
     </div>
   );
 }

@@ -1,0 +1,34 @@
+/* Estilos para el formulario de edición en línea */
+.edit-form-row {
+  background-color: #f9f9f9;
+  border-left: 4px solid #4a90e2;
+  margin: 0.5rem 0;
+  padding: 1rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  border-radius: 4px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.edit-form-row .edit-form-container {
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  border: none;
+}
+
+/* Ajuste para que el formulario aparezca conectado visualmente al cliente que se edita */
+.edit-form-row::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid #f9f9f9;
+}

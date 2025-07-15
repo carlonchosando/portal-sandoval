@@ -473,27 +473,46 @@
   border-bottom: 1px solid #eee;
 }
 
+/* Estilos de visualización responsiva */
+.desktop-only {
+  display: block;
+}
+
+.mobile-only {
+  display: none;
+}
+
 .table-container {
   overflow-x: auto;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .top-projects-table, .client-metrics-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
+  background-color: white;
 }
 
 .top-projects-table th, .top-projects-table td,
 .client-metrics-table th, .client-metrics-table td {
-  padding: 12px;
+  padding: 15px 12px;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #eaeaea;
 }
 
 .top-projects-table th, .client-metrics-table th {
-  background-color: #f5f5f5;
+  background-color: #f8f9fa;
   font-weight: 600;
-  color: #444;
+  color: #333;
+  position: sticky;
+  top: 0;
+}
+
+.top-projects-table tr:last-child td {
+  border-bottom: none;
 }
 
 .top-projects-table tr:hover, .client-metrics-table tr:hover {
@@ -501,40 +520,198 @@
 }
 
 .total-cost {
-  font-weight: bold;
+  font-weight: 600;
+  color: #2E7D32;
+}
+
+/* Para tablets - ajustamos el tamaño pero mantenemos tablas */
+@media (max-width: 768px) and (min-width: 577px) {
+  .top-projects-table th, .top-projects-table td,
+  .client-metrics-table th, .client-metrics-table td {
+    padding: 10px 8px;
+    font-size: 0.9rem;
+  }
+  
+  .top-projects-section h2, .client-metrics-section h2 {
+    margin-bottom: 0.8rem;
+    font-size: 1.3rem;
+  }
+}
+
+/* Para móviles - cambiamos a vista de tarjetas */
+@media (max-width: 576px) {
+  .desktop-only {
+    display: none;
+  }
+  
+  .mobile-only {
+    display: block;
+  }
+  
+  .top-projects-section h2, .client-metrics-section h2 {
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+    padding-left: 0.5rem;
+  }
+  
+  /* Estilos para las tarjetas de proyectos en móvil */
+  .project-cards-container, .client-cards-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin: 1rem 0.5rem;
+  }
+  
+  .project-card, .client-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .project-card:hover, .client-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  }
+  
+  .project-card-header, .client-card-header {
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eaeaea;
+    background-color: #f8f9fa;
+  }
+  
+  .project-card-header h3, .client-card-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+    max-width: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .client-card-header h3 {
+    font-weight: 600;
+    color: #1E88E5;
+  }
+  
+  .project-card-body, .client-card-body {
+    padding: 16px;
+  }
+  
+  /* Estilos para estadísticas de cliente */
+  .client-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eaeaea;
+  }
+  
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1E88E5;
+    margin-bottom: 4px;
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
+    color: #555;
+    white-space: nowrap;
+  }
+  
+  .project-detail, .client-detail {
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .project-detail:last-child, .client-detail:last-child {
+    margin-bottom: 0;
+    padding-top: 8px;
+    border-top: 1px solid #eaeaea;
+  }
+  
+  .detail-label {
+    font-weight: 500;
+    color: #555;
+  }
+  
+  .detail-value {
+    font-weight: 400;
+    color: #333;
+    text-align: right;
+    margin-left: 10px;
+  }
+  
+  .project-detail.total-cost .detail-value, .client-detail.total-cost .detail-value {
+    font-weight: 600;
+    color: #2E7D32;
+    font-size: 1.1rem;
+  }
 }
 
 .status-badge {
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: 20px;
   font-size: 0.85rem;
+  font-weight: 600;
   display: inline-block;
   text-align: center;
+  min-width: 90px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .status-badge {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    min-width: 80px;
+  }
 }
 
 .status-nuevo {
-  background-color: #E3F2FD;
-  color: #1976D2;
+  background-color: #2196F3;
+  color: white;
+  box-shadow: 0 2px 5px rgba(33, 150, 243, 0.3);
 }
 
 .status-en_progreso {
-  background-color: #FFF8E1;
-  color: #FFA000;
+  background-color: #FF9800;
+  color: white;
+  box-shadow: 0 2px 5px rgba(255, 152, 0, 0.3);
 }
 
 .status-en_revision {
-  background-color: #E8F5E9;
-  color: #388E3C;
+  background-color: #9C27B0;
+  color: white;
+  box-shadow: 0 2px 5px rgba(156, 39, 176, 0.3);
 }
 
 .status-completado {
-  background-color: #E8F5E9;
-  color: #388E3C;
+  background-color: #4CAF50;
+  color: white;
+  box-shadow: 0 2px 5px rgba(76, 175, 80, 0.3);
 }
 
 .status-pausado {
-  background-color: #FFEBEE;
-  color: #D32F2F;
+  background-color: #795548;
+  color: white;
+  box-shadow: 0 2px 5px rgba(121, 85, 72, 0.3);
 }
 
 /* Estados de carga y error */

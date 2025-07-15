@@ -309,7 +309,9 @@ const AdminDashboard = () => {
         {/* Tabla de proyectos más costosos */}
         <div className="top-projects-section">
           <h2>Proyectos Más Costosos</h2>
-          <div className="table-container">
+          
+          {/* Versión desktop - tabla tradicional */}
+          <div className="table-container desktop-only">
             <table className="top-projects-table">
               <thead>
                 <tr>
@@ -323,7 +325,7 @@ const AdminDashboard = () => {
               </thead>
               <tbody>
                 {metrics.top_projects.map((project, index) => (
-                  <tr key={index}>
+                  <tr key={`desktop-${index}`}>
                     <td>{project.name}</td>
                     <td>{project.client}</td>
                     <td>{formatCurrency(project.initial_cost)}</td>
@@ -343,20 +345,62 @@ const AdminDashboard = () => {
               </tbody>
             </table>
           </div>
+          
+          {/* Versión móvil - tarjetas */}
+          <div className="project-cards-container mobile-only">
+            {metrics.top_projects.map((project, index) => (
+              <div className="project-card" key={`mobile-${index}`}>
+                <div className="project-card-header">
+                  <h3>{project.name}</h3>
+                  <span className={`status-badge status-${project.status.toLowerCase()}`}>
+                    {project.status === 'NUEVO' ? 'Nuevo' :
+                      project.status === 'EN_PROGRESO' ? 'En Progreso' :
+                      project.status === 'EN_REVISION' ? 'En Revisión' :
+                      project.status === 'COMPLETADO' ? 'Completado' :
+                      project.status === 'PAUSADO' ? 'Pausado' : project.status}
+                  </span>
+                </div>
+                
+                <div className="project-card-body">
+                  <div className="project-detail">
+                    <span className="detail-label">Cliente:</span>
+                    <span className="detail-value">{project.client}</span>
+                  </div>
+                  
+                  <div className="project-detail">
+                    <span className="detail-label">Coste Inicial:</span>
+                    <span className="detail-value">{formatCurrency(project.initial_cost)}</span>
+                  </div>
+                  
+                  <div className="project-detail">
+                    <span className="detail-label">Coste de Tareas:</span>
+                    <span className="detail-value">{formatCurrency(project.task_cost)}</span>
+                  </div>
+                  
+                  <div className="project-detail total-cost">
+                    <span className="detail-label">Coste Total:</span>
+                    <span className="detail-value">{formatCurrency(project.total_cost)}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
         
         {/* Análisis por cliente (si no hay filtro de cliente) */}
         {!clientId && metrics.client_metrics.length > 0 && (
           <div className="client-metrics-section">
             <h2>Análisis por Cliente</h2>
-            <div className="table-container">
+            
+            {/* Versión desktop y tablet - tabla tradicional */}
+            <div className="table-container desktop-only">
               <table className="client-metrics-table">
                 <thead>
                   <tr>
                     <th>Cliente</th>
                     <th>Proyectos</th>
                     <th>Tareas</th>
-                    <th>Tareas Completadas</th>
+                    <th>Completadas</th>
                     <th>Coste Inicial</th>
                     <th>Coste de Tareas</th>
                     <th>Coste Total</th>
@@ -364,7 +408,7 @@ const AdminDashboard = () => {
                 </thead>
                 <tbody>
                   {metrics.client_metrics.map((client, index) => (
-                    <tr key={index}>
+                    <tr key={`desktop-client-${index}`}>
                       <td>{client.name}</td>
                       <td>{client.project_count}</td>
                       <td>{client.task_count}</td>
@@ -376,6 +420,49 @@ const AdminDashboard = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+            
+            {/* Versión móvil - tarjetas */}
+            <div className="client-cards-container mobile-only">
+              {metrics.client_metrics.map((client, index) => (
+                <div className="client-card" key={`mobile-client-${index}`}>
+                  <div className="client-card-header">
+                    <h3>{client.name}</h3>
+                  </div>
+                  
+                  <div className="client-card-body">
+                    <div className="client-stats">
+                      <div className="stat-item">
+                        <span className="stat-value">{client.project_count}</span>
+                        <span className="stat-label">Proyectos</span>
+                      </div>
+                      <div className="stat-item">
+                        <span className="stat-value">{client.task_count}</span>
+                        <span className="stat-label">Tareas</span>
+                      </div>
+                      <div className="stat-item">
+                        <span className="stat-value">{client.completed_tasks}</span>
+                        <span className="stat-label">Completadas</span>
+                      </div>
+                    </div>
+                    
+                    <div className="client-detail">
+                      <span className="detail-label">Coste Inicial:</span>
+                      <span className="detail-value">{formatCurrency(client.initial_cost)}</span>
+                    </div>
+                    
+                    <div className="client-detail">
+                      <span className="detail-label">Coste de Tareas:</span>
+                      <span className="detail-value">{formatCurrency(client.task_cost)}</span>
+                    </div>
+                    
+                    <div className="client-detail total-cost">
+                      <span className="detail-label">Coste Total:</span>
+                      <span className="detail-value">{formatCurrency(client.total_cost)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

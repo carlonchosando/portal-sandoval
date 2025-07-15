@@ -9,6 +9,7 @@ apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
     if (token) {
+      // Para JWT debemos usar 'Bearer' como prefijo, no 'Token'
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;

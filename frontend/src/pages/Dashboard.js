@@ -431,6 +431,18 @@ function Dashboard() {
         <Collapsible title="🗄️ Clientes Archivados">
           <ClientList clients={archivedClients} onRestore={handleRestoreClient} isArchivedList={true} />
         </Collapsible>
+
+        {/* Panel de acceso al Dashboard Administrativo */}
+        <div className="dashboard-panel admin-access-panel">
+          <h2>Herramientas de Administración</h2>
+          <p>Accede al panel administrativo para ver métricas financieras detalladas y análisis de datos.</p>
+          <button 
+            onClick={() => window.location.href = '/admin'} 
+            className="admin-dashboard-button"
+          >
+            🔍 Abrir Panel Administrativo
+          </button>
+        </div>
       </div>
     </div>
   );

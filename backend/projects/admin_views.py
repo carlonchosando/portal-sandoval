@@ -189,13 +189,15 @@ def admin_dashboard_metrics(request):
             created_at__date__lte=end_date
         ).aggregate(total=Sum('cost'))['total'] or Decimal('0.00')
         
-        total_project_cost = project.initial_cost + project_task_cost
+        # Manejo seguro para evitar error de tipo cuando initial_cost es None
+        initial_cost = project.initial_cost if project.initial_cost is not None else Decimal('0.00')
+        total_project_cost = initial_cost + project_task_cost
         
         top_projects.append({
             'id': project.id,
             'name': project.name,
             'client': project.client.business_name,
-            'initial_cost': float(project.initial_cost),
+            'initial_cost': float(initial_cost),  # Usamos la variable initial_cost ya verificada
             'task_cost': float(project_task_cost),
             'total_cost': float(total_project_cost),
             'status': project.status

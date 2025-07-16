@@ -113,8 +113,8 @@ function TaskList({ tasks, onToggleStatus, onUpdateTask, onDeleteTask, showProje
                 <div className="task-meta">
                   {showProjectName && <small className="task-project-name">Proyecto: {task.project_name} | Cliente: {task.client_name}</small>}
                   <span className={`task-status-badge status-badge-${task.status.toLowerCase()}`}>
-                    {/* Reemplazamos guiones bajos por espacios para una mejor lectura */}
-                    {task.status.replace('_', ' ')}
+                    {/* Reemplazamos todos los guiones bajos por espacios para una mejor lectura */}
+                    {task.status.replace(/_/g, ' ')}
                   </span>
                   <span className={`task-cost-badge ${parseFloat(task.cost) > 0 ? 'has-cost' : 'no-cost'}`}>
                     {formatCurrency(task.cost)}

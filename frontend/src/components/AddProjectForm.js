@@ -38,8 +38,20 @@ function AddProjectForm({ clients, onProjectAdded }) {
     data.append('description', formData.description);
     data.append('client_id', formData.client_id);
     data.append('currency', formData.currency);
-    if (formData.start_date) data.append('start_date', formData.start_date);
-    if (formData.initial_cost) data.append('initial_cost', formData.initial_cost);
+    
+    // Manejo mejorado de la fecha - aseguramos que se envía en formato YYYY-MM-DD
+    if (formData.start_date && formData.start_date.trim() !== '') {
+      console.log('Fecha seleccionada (raw):', formData.start_date);
+      // La fecha ya está en formato YYYY-MM-DD gracias al input type="date"
+      data.append('start_date', formData.start_date);
+      console.log('Fecha enviada al backend:', formData.start_date);
+    } else {
+      console.log('No se seleccionó fecha de inicio');
+      // Enviamos null explícitamente para indicar que no hay fecha
+      data.append('start_date', '');
+    }
+    
+    if (formData.initial_cost) data.append('initial_cost', formData.initial_cost.toString()); // Asegura que se envía como string exacto
     if (formData.youtube_url) data.append('youtube_url', formData.youtube_url);
     if (file) data.append('attachment', file);
 
@@ -76,7 +88,7 @@ function AddProjectForm({ clients, onProjectAdded }) {
         <label>Fecha de Inicio:</label>
         <input name="start_date" type="date" value={formData.start_date} onChange={handleChange} />
         <div className="cost-container">
-          <input name="initial_cost" type="number" value={formData.initial_cost} onChange={handleChange} placeholder="Coste Inicial" step="0.01" />
+          <input name="initial_cost" type="text" value={formData.initial_cost} onChange={handleChange} placeholder="Coste Inicial" pattern="\d*\.?\d*" inputMode="decimal" />
           <select name="currency" value={formData.currency} onChange={handleChange}>
             <option value="USD">U$S</option>
             <option value="ARS">ARS$</option>

@@ -37,12 +37,485 @@
 
 /* Contenedor para el encabezado completo */
 .project-header-wrapper {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.95));
+  padding: 1.8rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.project-header-wrapper:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Efecto decorativo para el encabezado */
+.project-header-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.1), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.08), transparent 40%);
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 12px;
+}
+
+/* Estilos para la sección de detalles del proyecto */
+.project-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.95));
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.project-details:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.09);
+}
+
+.project-details-section {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+  transition: background-color 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.project-details-section:hover {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.project-details-section:last-child {
+  border-bottom: none;
+}
+
+/* Decoraciones para las secciones */
+.project-details-section::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background: linear-gradient(to bottom, #4338ca, #6366f1, #8b5cf6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.project-details-section:hover::before {
+  opacity: 1;
+}
+
+.details-section-title {
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+  font-size: 1.1rem;
+  color: #1f2937;
+  font-weight: 700;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+  position: relative;
+  display: inline-block;
+  letter-spacing: 0.02em;
+}
+
+.details-items-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.8rem;
+  align-items: flex-start;
+}
+
+/* Estilo base para todos los elementos detail-item */
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  flex: 1;
+  margin-bottom: 0.8rem;
+  position: relative;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+/* Efectos generales al pasar el mouse */
+.detail-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Estilos específicos para cada tipo de detalle */
+
+/* Fecha de inicio - Tonalidad lavanda suave */
+.detail-fecha-inicio {
+  background: linear-gradient(135deg, rgba(237, 233, 254, 0.8), rgba(255, 255, 255, 0.9));
+  border-left: 3px solid #8b5cf6;
+}
+
+.detail-fecha-inicio:hover {
+  background: linear-gradient(135deg, rgba(237, 233, 254, 0.9), rgba(255, 255, 255, 0.95));
+  border-left: 3px solid #7c3aed;
+}
+
+.detail-fecha-inicio .detail-value {
+  color: #6d28d9;
+}
+
+/* Estado - Tonalidad azul vibrante */
+.detail-estado {
+  background: linear-gradient(135deg, rgba(224, 242, 254, 0.8), rgba(255, 255, 255, 0.9));
+  border-left: 3px solid #3b82f6;
+}
+
+.detail-estado:hover {
+  background: linear-gradient(135deg, rgba(224, 242, 254, 0.9), rgba(255, 255, 255, 0.95));
+  border-left: 3px solid #2563eb;
+}
+
+.detail-estado .detail-value {
+  color: #1d4ed8;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+/* Coste inicial - Tonalidad verde */
+.detail-coste-inicial {
+  background: linear-gradient(135deg, rgba(220, 252, 231, 0.8), rgba(255, 255, 255, 0.9));
+  border-left: 3px solid #10b981;
+}
+
+.detail-coste-inicial:hover {
+  background: linear-gradient(135deg, rgba(220, 252, 231, 0.9), rgba(255, 255, 255, 0.95));
+  border-left: 3px solid #059669;
+}
+
+.detail-coste-inicial .detail-value {
+  color: #047857;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+/* Coste extra - Tonalidad naranja/ámbar */
+.detail-coste-extra {
+  background: linear-gradient(135deg, rgba(254, 249, 195, 0.8), rgba(255, 255, 255, 0.9));
+  border-left: 3px solid #f59e0b;
+}
+
+.detail-coste-extra:hover {
+  background: linear-gradient(135deg, rgba(254, 249, 195, 0.9), rgba(255, 255, 255, 0.95));
+  border-left: 3px solid #d97706;
+}
+
+.detail-coste-extra .detail-value {
+  color: #b45309;
+}
+
+/* Tareas totales - Tonalidad índigo */
+.detail-tareas-totales {
+  background: linear-gradient(135deg, rgba(224, 231, 255, 0.8), rgba(255, 255, 255, 0.9));
+  border-left: 3px solid #6366f1;
+}
+
+.detail-tareas-totales:hover {
+  background: linear-gradient(135deg, rgba(224, 231, 255, 0.9), rgba(255, 255, 255, 0.95));
+  border-left: 3px solid #4f46e5;
+}
+
+.detail-tareas-totales .detail-value {
+  color: #4338ca;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Tareas incluidas - Tonalidad turquesa */
+.detail-tareas-incluidas {
+  background: linear-gradient(135deg, rgba(209, 250, 229, 0.8), rgba(255, 255, 255, 0.9));
+  border-left: 3px solid #14b8a6;
+}
+
+.detail-tareas-incluidas:hover {
+  background: linear-gradient(135deg, rgba(209, 250, 229, 0.9), rgba(255, 255, 255, 0.95));
+  border-left: 3px solid #0d9488;
+}
+
+.detail-tareas-incluidas .detail-value {
+  color: #0f766e;
+}
+
+/* Tareas con coste adicional - Tonalidad rosa */
+.detail-tareas-adicionales {
+  background: linear-gradient(135deg, rgba(252, 231, 243, 0.8), rgba(255, 255, 255, 0.9));
+  border-left: 3px solid #ec4899;
+}
+
+.detail-tareas-adicionales:hover {
+  background: linear-gradient(135deg, rgba(252, 231, 243, 0.9), rgba(255, 255, 255, 0.95));
+  border-left: 3px solid #db2777;
+}
+
+.detail-tareas-adicionales .detail-value {
+  color: #be185d;
+}
+
+.detail-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.detail-label::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, #6366f1, transparent);
+  transition: width 0.3s ease;
+}
+
+.detail-item:hover .detail-label::after {
+  width: 100%;
+}
+
+.detail-value {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #111827;
+  transition: color 0.3s ease, transform 0.3s ease;
+  line-height: 1.4;
+}
+
+.detail-item:hover .detail-value {
+  color: #4338ca;
+  transform: scale(1.02);
+}
+
+.status-value {
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.total-cost {
+  margin-top: 1.2rem;
+  padding: 1rem;
+  border-top: 1px dashed rgba(209, 213, 219, 0.8);
+  background: linear-gradient(135deg, rgba(249, 250, 251, 0.8), rgba(255, 255, 255, 0.9));
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.total-cost .detail-label,
+.total-cost .detail-value {
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 1.25rem;
+}
+
+.total-cost .detail-value {
+  color: #4338ca;
+  letter-spacing: 0.02em;
+}
+
+/* Estilos para el modal de edición */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.97));
+  border-radius: 12px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  position: relative;
+  animation: slideIn 0.3s ease-out;
+  transform-origin: center;
+}
+
+@keyframes slideIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Botón de editar proyecto */
+.edit-project-button {
+  padding: 0.5rem 1.2rem;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(99, 102, 241, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  outline: none;
+}
+
+.edit-project-button:hover {
+  background: linear-gradient(135deg, #4338ca, #4f46e5);
+  box-shadow: 0 6px 12px rgba(99, 102, 241, 0.35);
+  transform: translateY(-1px);
+}
+
+.edit-project-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+}
+
+/* Color para botón editar cuando el proyecto es nuevo */
+.project-detail-container[data-status="NUEVO"] .edit-project-button {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.25);
+}
+
+/* Color para botón editar cuando el proyecto está en progreso */
+.project-detail-container[data-status="EN_PROGRESO"] .edit-project-button {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  box-shadow: 0 4px 6px rgba(249, 115, 22, 0.25);
+}
+
+/* Color para botón editar cuando el proyecto está completado */
+.project-detail-container[data-status="COMPLETADO"] .edit-project-button {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  box-shadow: 0 4px 6px rgba(34, 197, 94, 0.25);
+}
+
+/* Color para botón editar cuando el proyecto está pausado */
+.project-detail-container[data-status="PAUSADO"] .edit-project-button {
+  background: linear-gradient(135deg, #a1a1aa, #71717a);
+  box-shadow: 0 4px 6px rgba(161, 161, 170, 0.25);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .detail-item {
+    min-width: 100%;
+  }
+}
+
+/* Estilos para indicadores de actualización en tiempo real */
+.updating-indicator {
+  font-size: 0.85em;
+  color: #6366f1;
+  font-weight: normal;
+  font-style: italic;
+  animation: pulse 1.5s infinite;
+}
+
+/* Animación de pulso para indicadores */
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* Clase para elementos que se están actualizando */
+.updating-items {
+  position: relative;
+  transition: opacity 0.3s ease;
+}
+
+/* Efecto visual durante la actualización */
+.project-info.updating,
+.project-stats.updating,
+.updating-task-list {
+  background-color: rgba(248, 250, 252, 0.9);
+  transition: background-color 0.3s ease;
+}
+
+/* Estilos para la cabecera de la lista de tareas */
+.task-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: rgba(243, 244, 246, 0.7);
+  border-radius: 8px;
+  border-left: 4px solid #6366f1;
+}
+
+.task-list-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #374151;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+/* Animación durante la actualización */
+.updating-task-list {
+  position: relative;
+}
+
+.updating-task-list::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #6366f1, transparent);
+  animation: loading-bar 1.5s infinite;
+  z-index: 1;
+}
+
+@keyframes loading-bar {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 /* Parte superior del encabezado con botón atrás y badge de estado */
@@ -53,41 +526,11 @@
   margin-bottom: 0.5rem;
 }
 
-/* Enlace para volver */
-.back-link {
-  display: inline-flex;
+/* Contenedor para las acciones del proyecto (botón editar y badge de estado) */
+.project-actions {
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: #4b5563;
-  text-decoration: none;
-  font-weight: 600;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  background-color: rgba(243, 244, 246, 0.8);
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 2;
-  border: 1px solid rgba(229, 231, 235, 0.8);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-}
-
-.back-link:hover {
-  background-color: rgba(229, 231, 235, 0.9);
-  color: #111827;
-  transform: translateX(-3px);
-  border-color: rgba(209, 213, 219, 0.9);
-}
-
-.back-link::before {
-  content: '←';
-  font-size: 1.2rem;
-  line-height: 0;
-  margin-right: 0.4rem;
-  transition: transform 0.3s ease;
-}
-
-.back-link:hover::before {
-  transform: translateX(-2px);
+  gap: 10px;
 }
 
 /* Badge de estado del proyecto */
@@ -107,19 +550,19 @@
 
 /* Colores según estado */
 .project-detail-container[data-status="NUEVO"] .project-status-badge {
-  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
 }
 
 .project-detail-container[data-status="EN_PROGRESO"] .project-status-badge {
-  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  background: linear-gradient(135deg, #f97316, #ea580c);
 }
 
 .project-detail-container[data-status="COMPLETADO"] .project-status-badge {
-  background: linear-gradient(135deg, #10b981, #34d399);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
 }
 
 .project-detail-container[data-status="PAUSADO"] .project-status-badge {
-  background: linear-gradient(135deg, #6b7280, #9ca3af);
+  background: linear-gradient(135deg, #a1a1aa, #71717a);
 }
 
 /* Sección principal del título */
@@ -260,6 +703,39 @@
   color: #4b5563;
   line-height: 1.6;
   margin: 0;
+}
+
+/* Detalles adicionales del proyecto */
+.project-details {
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-top: 1px solid rgba(229, 231, 235, 0.8);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.project-detail-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.5rem;
+}
+
+.project-detail-item strong {
+  color: #4b5563;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.project-detail-item a {
+  color: #4f46e5;
+  text-decoration: none;
+  position: relative;
+  display: inline-block;
+}
+
+.project-detail-item a:hover {
+  text-decoration: underline;
 }
 
 /* Separador */

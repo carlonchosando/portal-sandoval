@@ -2,17 +2,65 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './ProjectList.css'; // Importamos los estilos
 
-// Pequeña función de ayuda para formatear los números como moneda
+// Función para formatear los números como moneda en formato español
 const formatCurrency = (amount) => {
-  // Convierte el string a número y luego lo formatea
-  const number = parseFloat(amount);
-  if (isNaN(number)) return '$0.00';
-  return number.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+  // Si no hay valor o es inválido, mostramos cero
+  if (!amount || isNaN(parseFloat(amount))) return '$ 0,00';
+  
+  // Convertimos el valor a número para asegurar que sea válido
+  const numericValue = parseFloat(amount);
+  
+  // Formateamos con separador de miles (punto) y decimales (coma)
+  const formattedValue = numericValue.toString()
+    .replace('.', ',') // Primero reemplazamos el punto decimal por coma
+    .replace(/\B(?=(\d{3})+(?!\d))/g, '.'); // Luego añadimos puntos como separadores de miles
+  
+  const prefix = '$ ';
+  return prefix + formattedValue;
+};
+
+// Función para formatear fechas en formato español DD/MM/YYYY
+const formatDate = (dateString) => {
+  console.log('formatDate recibiendo:', dateString, 'tipo:', typeof dateString);
+  
+  // Si es null, undefined o string vacío
+  if (!dateString) {
+    console.log('Fecha vacía o nula');
+    return '';
+  }
+  
+  try {
+    // Intentamos crear un objeto de fecha
+    const date = new Date(dateString);
+    
+    // Verificamos si la fecha es válida
+    if (isNaN(date.getTime())) {
+      console.log('Fecha inválida:', dateString);
+      return dateString; // Si no es válida, devolvemos el string original
+    }
+    
+    // Formateamos la fecha en formato español DD/MM/YYYY
+    const formattedDate = date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    console.log('Fecha formateada:', formattedDate);
+    return formattedDate;
+  } catch (error) {
+    console.error('Error al formatear fecha:', error);
+    return dateString; // En caso de error, devolvemos el string original
+  }
 };
 
 function ProjectList({ projects }) {
   // Estado para controlar qué clientes están expandidos/colapsados
   const [expandedClients, setExpandedClients] = useState({});
+  
+  // Función de depuración para verificar los datos de proyectos
+  console.log('Proyectos cargados:', projects);
+  if (projects && projects.length > 0) {
+    projects.forEach(project => {
+      console.log(`Proyecto ID ${project.id}: ${project.name}`);
+      console.log(`Fecha de inicio (raw):`, project.start_date);
+    });
+  }
   
   if (!projects || projects.length === 0) {
     return <p>No hay proyectos para mostrar.</p>;
@@ -148,6 +196,11 @@ function ProjectList({ projects }) {
                     <div className="project-header">
                       <h3 className="project-name">{project.name}</h3>
                       <p className="project-status">Estado: <strong>{project.status}</strong></p>
+                      <p className="project-date">
+                        {project.start_date 
+                          ? `Inicio: ${formatDate(project.start_date)}` 
+                          : 'Sin fecha de inicio'}
+                      </p>
                     </div>
                     <div className="project-costs">
                       <div className="cost-item">

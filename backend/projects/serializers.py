@@ -31,7 +31,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         # Añadimos los nuevos campos a la lista de fields.
         fields = [
             'id', 'name', 'client', 'client_id', 'description', 'status', 
-            'initial_cost', 'extra_cost', 'total_cost', 'task_count',
+            'start_date', 'initial_cost', 'extra_cost', 'total_cost', 'task_count',
             'tasks_with_cost_count', 'tasks_without_cost_count',
             'created_at'
         ]
@@ -51,7 +51,10 @@ class ProjectSerializer(serializers.ModelSerializer):
         """
         # Reutilizamos el método anterior para no repetir código
         extra = self.get_extra_cost(obj)
-        return obj.initial_cost + extra
+        
+        # Verificar si initial_cost es None y usar 0 en ese caso
+        initial_cost = obj.initial_cost if obj.initial_cost is not None else Decimal('0.00')
+        return initial_cost + extra
 
     def get_task_count(self, obj):
         """

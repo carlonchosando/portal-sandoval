@@ -114,7 +114,7 @@ function Dashboard() {
           setArchivedClients(prev => [...prev, {...clientToArchive, archived: true}]);
         }
         
-        // Enviar al backend
+        // Enviar al backend a
         await apiClient.delete(`clients/${clientId}/`); // La llamada a la API no cambia
       } catch (err) {
         console.error("Error al archivar cliente:", err.response?.data || err.message);

@@ -1,97 +1,243 @@
-# Docker Compose para PRODUCCIÓN - Portal Sandoval
-# Este archivo está optimizado para despliegue en Portainer
+# 🚀 Docker Compose para OpenMediaVault - Portal Sandoval
+# Optimizado específicamente para despliegue en sistemas NAS OpenMediaVault
+# Versión: 1.0 - Optimizada para OMV
 version: '3.8'
 
 services:
-  # Servicio del Backend (API con Django)
+  # 🐍 Servicio del Backend (Django API)
   backend:
     build: ./backend
-    container_name: portal_sandoval_backend_prod
+    container_name: portal_sandoval_backend_omv
+    hostname: portal-backend
     command: sh -c "chmod +x /app/entrypoint.production.sh && /app/entrypoint.production.sh"
     volumes:
+      # Volúmenes optimizados para OMV - persisten en el almacenamiento del NAS
       - static_volume:/app/static
       - media_volume:/app/media
+      # Logs para monitoreo
+      - logs_volume:/app/logs
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      # Puerto 8080 para evitar conflictos con servicios OMV
+      - "${BACKEND_PORT:-8080}:8000"
     environment:
+      # Configuración de Django
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG:-False}
       - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-*}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
+      # Base de datos
+      - POSTGRES_DB=${POSTGRES_DB:-portal_sandoval_omv}
+      - POSTGRES_USER=${POSTGRES_USER:-portal_admin}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
-      # Variables para el superusuario de Django
+      # Usuario administrador automático
       - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME:-admin}
-      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-admin@portalsandoval.com}
-      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-admin123}
+      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-admin@portalsandoval.local}
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-ChangeMe123!}
+      # Configuración específica para OMV
+      - TZ=${TZ:-America/Argentina/Buenos_Aires}
+      - PYTHONUNBUFFERED=1
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
-      - portal_network
+      - portal_network_omv
+    # Límites de recursos para NAS
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    # Healthcheck para monitoreo
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/admin/login/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Logging optimizado
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # Servicio de la Base de Datos (PostgreSQL)
+  # 🐘 Servicio de la Base de Datos (PostgreSQL)
   db:
     image: postgres:15-alpine
-    container_name: portal_sandoval_db_prod
+    container_name: portal_sandoval_db_omv
+    hostname: portal-database
     volumes:
+      # Datos persistentes en el almacenamiento del NAS
       - postgres_data:/var/lib/postgresql/data/
+      # Backups automáticos
+      - postgres_backups:/backups
     environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DB:-portal_sandoval_omv}
+      - POSTGRES_USER=${POSTGRES_USER:-portal_admin}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+      - TZ=${TZ:-America/Argentina/Buenos_Aires}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      # Puerto 5433 para evitar conflictos con PostgreSQL del sistema
+      - "${DB_PORT:-5433}:5432"
     restart: unless-stopped
     networks:
-      - portal_network
+      - portal_network_omv
+    # Límites de recursos para NAS
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.3'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+    # Healthcheck para PostgreSQL
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-portal_admin} -d ${POSTGRES_DB:-portal_sandoval_omv}"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    # Logging optimizado
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
 
-  # Servicio del Frontend (React)
+  # ⚛️ Servicio del Frontend (React)
   frontend:
     build: ./frontend
-    container_name: portal_sandoval_frontend_prod
+    container_name: portal_sandoval_frontend_omv
+    hostname: portal-frontend
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+      # Puerto 3001 para evitar conflictos
+      - "${FRONTEND_PORT:-3001}:3000"
     environment:
-      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8000}
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8080}
+      - TZ=${TZ:-America/Argentina/Buenos_Aires}
+      - NODE_ENV=production
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
     networks:
-      - portal_network
+      - portal_network_omv
+    # Límites de recursos para NAS
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.3'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+    # Healthcheck para React
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    # Logging optimizado
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
 
-  # Servicio Nginx (Proxy Reverso) - OPCIONAL
-  nginx:
-    image: nginx:alpine
-    container_name: portal_sandoval_nginx_prod
-    ports:
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-      - static_volume:/var/www/static:ro
-      - media_volume:/var/www/media:ro
-    depends_on:
-      - backend
-      - frontend
-    restart: unless-stopped
-    networks:
-      - portal_network
-    # Comentar este servicio si no necesitas nginx inicialmente
+  # 🌐 Servicio Nginx (Proxy Reverso) - OPCIONAL
+  # Descomenta este servicio si necesitas un proxy reverso
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: portal_sandoval_nginx_omv
+  #   hostname: portal-proxy
+  #   ports:
+  #     - "${HTTP_PORT:-8081}:80"
+  #     - "${HTTPS_PORT:-8443}:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/ssl:/etc/nginx/ssl:ro
+  #     - static_volume:/var/www/static:ro
+  #     - media_volume:/var/www/media:ro
+  #   depends_on:
+  #     backend:
+  #       condition: service_healthy
+  #     frontend:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  #   networks:
+  #     - portal_network_omv
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 64M
+  #         cpus: '0.1'
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:80"]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 3
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "5m"
+  #       max-file: "3"
 
-# Redes
+# 🌐 Redes
 networks:
-  portal_network:
+  portal_network_omv:
     driver: bridge
+    name: portal_sandoval_network
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
 
-# Volúmenes para persistencia de datos
+# 💾 Volúmenes para persistencia de datos en OMV
+# Estos volúmenes se almacenarán en el sistema de archivos del NAS
 volumes:
+  # Base de datos PostgreSQL
   postgres_data:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${OMV_DATA_PATH:-/srv/dev-disk-by-uuid-9cac2098-d700-46fa-82a3-0835758908e6/portal-sandoval}/postgres_data
+  
+  # Backups de base de datos
+  postgres_backups:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${OMV_DATA_PATH:-/srv/dev-disk-by-uuid-9cac2098-d700-46fa-82a3-0835758908e6/portal-sandoval}/postgres_backups
+  
+  # Archivos estáticos de Django
   static_volume:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${OMV_DATA_PATH:-/srv/dev-disk-by-uuid-9cac2098-d700-46fa-82a3-0835758908e6/portal-sandoval}/static
+  
+  # Archivos multimedia subidos
   media_volume:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${OMV_DATA_PATH:-/srv/dev-disk-by-uuid-9cac2098-d700-46fa-82a3-0835758908e6/portal-sandoval}/media
+  
+  # Logs de la aplicación
+  logs_volume:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${OMV_DATA_PATH:-/srv/dev-disk-by-uuid-9cac2098-d700-46fa-82a3-0835758908e6/portal-sandoval}/logs

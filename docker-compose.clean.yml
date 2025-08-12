@@ -1,6 +1,6 @@
 # 🚀 Docker Compose para OpenMediaVault - Portal Sandoval
-# Optimizado para producción en sistemas NAS OpenMediaVault
-# Versión: 2.0 - Lista para GitHub Repository
+# Optimizado específicamente para despliegue en sistemas NAS OpenMediaVault
+# Versión: 1.0 - Optimizada para OMV
 version: '3.8'
 
 services:
@@ -17,7 +17,7 @@ services:
       # Logs para monitoreo
       - logs_volume:/app/logs
     ports:
-      # Puerto configurable para evitar conflictos con servicios OMV
+      # Puerto 8012 para evitar conflictos con servicios OMV
       - "${BACKEND_PORT:-8012}:8000"
     environment:
       # Configuración de Django
@@ -121,7 +121,7 @@ services:
     # Comando optimizado para producción
     command: sh -c "npm run build && npx serve -s build -l 3000"
     ports:
-      # Puerto configurable para evitar conflictos
+      # Puerto 3015 para evitar conflictos
       - "${FRONTEND_PORT:-3015}:3000"
     environment:
       - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:${BACKEND_PORT:-8012}}

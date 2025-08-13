@@ -1,0 +1,90 @@
+version: '3.8'
+
+# Portal Sandoval - Archivo de Docker Compose para DESARROLLO
+# Este archivo está optimizado para entorno de desarrollo local
+
+services:
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-portal_sandoval}
+      POSTGRES_USER: ${POSTGRES_USER:-portal_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-portal_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # Puerto mapeado para acceso local (ajustable en .env con DB_PORT)
+      - "${DB_PORT:-5434}:5432"
+    networks:
+      - portal_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-portal_user} -d ${POSTGRES_DB:-portal_sandoval}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Backend - Django
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./backend:/app
+      - static_data:/app/static
+      - media_data:/app/media
+    ports:
+      # Puerto mapeado para acceso local (ajustable en .env con BACKEND_PORT)
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-tu_clave_secreta_para_desarrollo}
+      - DEBUG=${DEBUG:-True}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-*,localhost,127.0.0.1}
+      - POSTGRES_DB=${POSTGRES_DB:-portal_sandoval}
+      - POSTGRES_USER=${POSTGRES_USER:-portal_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-portal_password}
+      - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME:-admin}
+      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-admin@portalsandoval.com}
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-admin123}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "./entrypoint.sh"]
+    networks:
+      - portal_network
+
+  # Frontend - React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./frontend:/app
+      # Excluimos node_modules y build para no sobreescribir los instalados en la imagen
+      - /app/node_modules
+      - /app/build
+    ports:
+      # Puerto mapeado para acceso local (ajustable en .env con FRONTEND_PORT)
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8000}
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+    networks:
+      - portal_network
+    command: ["npm", "start"]
+
+networks:
+  portal_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  static_data:
+  media_data:

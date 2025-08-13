@@ -1,6 +1,7 @@
 # --- Secretos ---
 # ¡NUNCA subas este archivo a un repositorio público!
 .env
+docker-compose.production.yml
 
 # --- Dependencias y Cachés ---
 # Estas carpetas se pueden regenerar y no deben estar en el control de versiones.

@@ -23,9 +23,13 @@ from rest_framework_simplejwt.views import (
 from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
+from .api_root import api_root
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # API Root - Vista principal de la API
+    path('api/v1/', api_root, name='api-root'),
 
     # Ruta principal para toda nuestra API. Usar 'v1' es una buena práctica para versionar.
     path('api/v1/', include('clients.urls')),

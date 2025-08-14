@@ -43,9 +43,11 @@ services:
       - SECRET_KEY=${SECRET_KEY:-django-insecure-tu_clave_secreta_para_desarrollo}
       - DEBUG=${DEBUG:-True}
       - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-*,localhost,127.0.0.1}
+      - STATIC_ROOT=/app/staticfiles
       - POSTGRES_DB=${POSTGRES_DB:-portal_sandoval}
       - POSTGRES_USER=${POSTGRES_USER:-portal_user}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-portal_password}
+      - POSTGRES_HOST=db
       - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME:-admin}
       - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-admin@portalsandoval.com}
       - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-admin123}

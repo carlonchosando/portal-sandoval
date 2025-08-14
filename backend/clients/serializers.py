@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Client
+from .models import Client, AppConfiguration
 from django.db import IntegrityError
 from tasks.models import Task
 from decimal import Decimal
@@ -122,3 +122,25 @@ class ClientSerializer(serializers.ModelSerializer):
         initial = self.get_initial_cost(obj)
         extra = self.get_extra_cost(obj)
         return initial + extra
+
+
+class AppConfigurationSerializer(serializers.ModelSerializer):
+    """
+    Serializer para la configuración global de la aplicación.
+    Permite personalizar el nombre y favicon de la aplicación.
+    """
+    favicon_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = AppConfiguration
+        fields = ['id', 'app_name', 'favicon', 'favicon_url', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_favicon_url(self, obj):
+        """Devuelve la URL completa del favicon si existe"""
+        if obj.favicon:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.favicon.url)
+            return obj.favicon.url
+        return None

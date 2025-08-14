@@ -6,13 +6,16 @@ import Login from './components/Login';
 import Dashboard from './pages/Dashboard';
 import ProjectDetail from './pages/ProjectDetail';
 import AdminDashboard from './pages/AdminDashboard';
+import { AppConfigProvider, useAppConfig } from './contexts/AppConfigContext';
 
-function App() {
+// Componente interno que usa el contexto
+function AppContent() {
   const [loginError, setLoginError] = useState(null); // Para errores de login
   // Usaremos 'accessToken' para ser consistentes con la nueva lógica de api.js
   const [token, setToken] = useState(localStorage.getItem('accessToken'));
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+  const { appName } = useAppConfig(); // Usar el nombre dinámico
 
   // --- LÓGICA DE AUTENTICACIÓN ---
   const handleLogin = async (username, password) => {
@@ -89,16 +92,8 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Portal Sandoval</h1>
+        <h1>{appName}</h1>
         <div className="header-controls">
-          {isAdmin && (
-            <button 
-              onClick={() => navigate('/admin')} 
-              className="admin-button"
-            >
-              Panel Administrativo
-            </button>
-          )}
           <button onClick={handleLogout} className="logout-button">Cerrar Sesión</button>
         </div>
       </header>
@@ -115,6 +110,15 @@ function App() {
         </Routes>
       </main>
     </div>
+  );
+}
+
+// Componente principal que envuelve todo con el Provider
+function App() {
+  return (
+    <AppConfigProvider>
+      <AppContent />
+    </AppConfigProvider>
   );
 }
 

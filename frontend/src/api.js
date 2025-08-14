@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+// Usamos la variable de entorno para la URL del backend
+const API_URL = process.env.REACT_APP_API_URL || window.location.origin;
+
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000/api/v1/',
+  baseURL: `${API_URL}/api/v1/`,
 });
 
 // Interceptor para AÑADIR el token a cada petición

@@ -1,8 +1,9 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Client
-from .serializers import ClientSerializer
+from rest_framework.views import APIView
+from .models import Client, AppConfiguration
+from .serializers import ClientSerializer, AppConfigurationSerializer
 
 class ClientViewSet(viewsets.ModelViewSet):
     """
@@ -47,3 +48,32 @@ class ClientViewSet(viewsets.ModelViewSet):
         instance.is_active = True
         instance.save()
         return Response({'status': 'cliente restaurado'}, status=status.HTTP_200_OK)
+
+
+class AppConfigurationView(APIView):
+    """
+    Vista para obtener y actualizar la configuración global de la aplicación.
+    GET: Obtiene la configuración actual
+    PATCH: Actualiza la configuración (nombre y/o favicon)
+    """
+    
+    def get(self, request):
+        """Obtiene la configuración actual de la aplicación"""
+        config = AppConfiguration.get_config()
+        serializer = AppConfigurationSerializer(config, context={'request': request})
+        return Response(serializer.data)
+    
+    def patch(self, request):
+        """Actualiza la configuración de la aplicación"""
+        config = AppConfiguration.get_config()
+        serializer = AppConfigurationSerializer(
+            config, 
+            data=request.data, 
+            partial=True,
+            context={'request': request}
+        )
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

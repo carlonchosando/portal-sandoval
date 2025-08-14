@@ -11,4 +11,8 @@ django-cors-headers
 # Para autenticación por Tokens (JSON Web Tokens)
 djangorestframework-simplejwt
 
-django-cors-headers
+# Servidor WSGI de producción
+gunicorn
+
+# Mejoras de seguridad
+django-secure

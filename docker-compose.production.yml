@@ -1,0 +1,124 @@
+# Portal Sandoval - Archivo de Despliegue para Producción
+# Este archivo está optimizado para despliegue con imágenes pre-construidas en DockerHub
+# Compatible con OpenMediaVault y Portainer
+
+services:
+  # Servicio para inicializar directorios necesarios
+  init-directories:
+    image: alpine:latest
+    command: >
+      sh -c '
+      mkdir -p /data/postgres /data/static /data/media && 
+      chmod -R 777 /data/postgres /data/static /data/media && 
+      chown -R 999:999 /data/postgres &&
+      echo "✅ Directorios inicializados correctamente"
+      '
+    volumes:
+      - ./data/postgres:/data/postgres
+      - portal-static-data:/data/static
+      - portal-media-data:/data/media
+    networks:
+      - portal-network
+    restart: "no"
+
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Desactivar pg_ctl espera automática para acelerar
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - portal-network
+    # Healthcheck habilitado para estabilidad
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # Backend - Django (usando imagen precompilada de DockerHub)
+  backend:
+    image: carlonchosando/portal-sandoval-backend:latest
+    depends_on:
+      init-directories:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+    # Reducir el retraso para evitar timeout
+    command: ["sh", "-c", "sleep 5 && sh /app/entrypoint.production.sh"]
+    restart: always
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG:-False}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-*}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://frontend:3000,http://${BACKEND_HOST}:${FRONTEND_PORT:-3000}}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME:-admin}
+      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-admin@portalsandoval.com}
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-admin123}
+      # Configuración de correo para recuperación de contraseñas
+      - EMAIL_HOST=${EMAIL_HOST:-smtp.gmail.com}
+      - EMAIL_PORT=${EMAIL_PORT:-587}
+      - EMAIL_USE_TLS=${EMAIL_USE_TLS:-True}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER:-}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-}
+    volumes:
+      - portal-static-data:/app/static
+      - portal-media-data:/app/media
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    # comando movido arriba con retraso
+    networks:
+      - portal-network
+    healthcheck:
+      test: ["CMD", "true"]
+      interval: 5s
+      timeout: 1s
+      retries: 1
+      start_period: 5s
+
+  # Frontend - React (usando imagen precompilada de DockerHub)
+  # CONFIGURADO PARA NGINX EXTERNO - Solo expone puerto interno
+  frontend:
+    image: carlonchosando/portal-sandoval-frontend:latest
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: always
+    environment:
+      - REACT_APP_API_URL=http://${BACKEND_HOST:-localhost}:${BACKEND_PORT:-8000}
+    # PUERTO INTERNO - NGINX externo hará el reverse proxy
+    expose:
+      - "3000"
+    # NO exponer puerto público - NGINX externo maneja esto
+    # ports:
+    #   - "${FRONTEND_PORT:-3000}:3000"
+    networks:
+      - portal-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  portal-network:
+    driver: bridge
+
+volumes:
+  # portal-postgres-data: # Comentado para usar path directo
+  #   driver: local
+  portal-static-data:
+    driver: local
+  portal-media-data:
+    driver: local

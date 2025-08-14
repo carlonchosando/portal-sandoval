@@ -1,5 +1,6 @@
 import React from 'react';
 import EditClientForm from './EditClientForm'; // Asegúrate de que esta ruta de importación sea correcta
+import './ClientList.css'; // Importamos los estilos mejorados para la modal de edición
 
 // Este componente ahora recibe también editingClient y las funciones relacionadas
 function ClientList({ clients, onEdit, onDelete, onRestore, isArchivedList = false, editingClient, onUpdateClient, onCancelEdit }) {  

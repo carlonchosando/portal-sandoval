@@ -33,13 +33,39 @@ MIDDLEWARE = [
 # ... (otras configuraciones)
 
 # --- Configuración de CORS ---
-# Lista de orígenes que tienen permiso para hacer peticiones a nuestra API.
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # El origen de nuestra aplicación React
-    "http://127.0.0.1:3000",
-]
+# Lee orígenes permitidos desde variables de entorno o usa valores por defecto
+import os
 
-# Opcional: si quieres ser más permisivo en desarrollo
-# CORS_ALLOW_ALL_ORIGINS = True
+# Configuración CORS mejorada para producción
+CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
+if not CORS_ALLOWED_ORIGINS or CORS_ALLOWED_ORIGINS == ['']:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://petruspub-sando.duckdns.org",
+        "https://www.petruspub-sando.duckdns.org",
+    ]
+
+# Configuración adicional de CORS para mayor compatibilidad
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
 
 # ... (resto de tu configuración de settings.py)

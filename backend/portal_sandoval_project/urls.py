@@ -46,3 +46,5 @@ urlpatterns = [
 # Añadimos esta línea para que el servidor de desarrollo de Django sirva los archivos subidos.
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # También servir archivos estáticos (CSS, JS) en desarrollo
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

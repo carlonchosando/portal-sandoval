@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useReducer } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { FaYoutube, FaPaperclip } from 'react-icons/fa';
 import apiClient from '../api';
 import TaskList from '../components/TaskList';
 import AddTaskForm from '../components/AddTaskForm';
@@ -441,7 +442,33 @@ function ProjectDetail() {
         
         <div className="project-header-main">
           <div className="project-title-section">
-            <h1>{project.name}</h1>
+            <div className="project-title-with-links">
+              <h1>{project.name}</h1>
+              <div className="project-links">
+                {project.youtube_url && (
+                  <a 
+                    href={project.youtube_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="project-link-icon youtube" 
+                    title="Ver video en YouTube"
+                  >
+                    <FaYoutube />
+                  </a>
+                )}
+                {project.attachment && (
+                  <a 
+                    href={project.attachment} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="project-link-icon attachment" 
+                    title="Ver archivo adjunto"
+                  >
+                    <FaPaperclip />
+                  </a>
+                )}
+              </div>
+            </div>
             <p className="project-client">{project.client.business_name}</p>
           </div>
           <div className={projectInfoClass}>
@@ -523,7 +550,7 @@ function ProjectDetail() {
                 setProject(updatedProject);
                 setShowEditProjectForm(false);
                 // Recalculamos las estadísticas con el coste inicial actualizado
-                calculateProjectStats(updatedProject.initial_cost, tasks);
+                recalculateProjectStats();
                 toast.success('¡Proyecto actualizado con éxito!');
               }} 
               onCancel={() => setShowEditProjectForm(false)} 

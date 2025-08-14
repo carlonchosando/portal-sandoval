@@ -1,22 +1,163 @@
-# --- Secretos ---
-# ¡NUNCA subas este archivo a un repositorio público!
+# ===== PORTAL SANDOVAL - GITIGNORE SEGURO =====
+# Protección completa contra filtración de secretos y archivos sensibles
+
+# --- SECRETOS Y CONFIGURACIÓN CRÍTICA ---
+# ¡NUNCA subir estos archivos a repositorio público!
 .env
-docker-compose.production.yml
+.env.local
+.env.production
+.env.development
+.env.staging
+.env.test
+*.env
+docker-compose.override.yml
+# docker-compose.production.yml  # Comentado: puede ser público sin secretos
 
-# --- Dependencias y Cachés ---
-# Estas carpetas se pueden regenerar y no deben estar en el control de versiones.
+# --- CLAVES Y CERTIFICADOS ---
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+id_rsa*
+*.ssh
+secrets/
+certs/
+ssl/
+
+# --- BASE DE DATOS ---
+*.db
+*.sqlite
+*.sqlite3
+db.sqlite3
+database.db
+data/postgres/
+data/
+*.sql
+*.dump
+
+# --- LOGS Y ARCHIVOS TEMPORALES ---
+*.log
+logs/
+*.tmp
+*.temp
+temp/
+tmp/
+
+# --- BACKEND DJANGO ---
 backend/__pycache__/
-frontend/node_modules/
-frontend/build/
+backend/*.pyc
+backend/*.pyo
+backend/*.pyd
+backend/.Python
+backend/env/
+backend/venv/
+backend/.venv/
+backend/pip-log.txt
+backend/pip-delete-this-directory.txt
+backend/.tox/
+backend/.coverage
+backend/.pytest_cache/
+backend/htmlcov/
+backend/.cache/
+backend/nosetests.xml
+backend/coverage.xml
+backend/*.cover
+backend/.hypothesis/
+backend/.pytest_cache/
+backend/celerybeat-schedule
+backend/celerybeat.pid
+backend/staticfiles/
+backend/static_collected/
 
-# --- Archivos de Usuario ---
-# Los archivos subidos por los usuarios (imágenes, PDFs) se gestionan con volúmenes de Docker, no con Git.
+# --- ARCHIVOS DE USUARIO Y MEDIA ---
 backend/media/
+backend/uploads/
+media/
+uploads/
 
-# --- Archivos del Sistema Operativo ---
+# --- FRONTEND REACT ---
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
+frontend/coverage/
+frontend/build/
+frontend/.nyc_output
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.eslintcache
+
+# --- DOCKER ---
+.dockerignore
+docker-compose.override.yml
+Dockerfile.local
+*.dockerfile.local
+
+# --- ARCHIVOS DEL SISTEMA OPERATIVO ---
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 
-# --- Archivos de IDEs (Opcional, pero buena práctica) ---
+# --- IDEs Y EDITORES ---
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+.project
+.metadata
+.classpath
+.c9/
+*.launch
+.settings/
+.sublime-workspace
+.sublime-project
+
+# --- HERRAMIENTAS DE DESARROLLO ---
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.coverage
+htmlcov/
+.tox/
+.nox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# --- ARCHIVOS DE BACKUP ---
+*.bak
+*.backup
+*.old
+*.orig
+*.save
+*~
+
+# --- ARCHIVOS ESPECÍFICOS DE PORTAL SANDOVAL ---
+# Favicons personalizados (se manejan via Docker volumes)
+backend/media/config/
+# Reportes generados temporalmente
+reports/
+exports/
+*.pdf
+*.xlsx
+*.csv
+
+# --- ARCHIVOS DE CONFIGURACIÓN LOCAL ---
+local_settings.py
+settings_local.py
+config_local.py

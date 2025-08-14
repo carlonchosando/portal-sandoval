@@ -78,7 +78,11 @@ MIDDLEWARE = [
 # Volvemos temporalmente a la configuración más permisiva para aislar el problema.
 # Si esto funciona, el problema está en la lista específica de orígenes.
 CORS_ORIGIN_ALLOW_ALL = True
-# CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000", 
+    "http://127.0.0.1:3000",
+    "http://frontend:3000",  # Para comunicación entre contenedores
+]
 CORS_ALLOW_CREDENTIALS = True # Permite que el navegador envíe cookies (si se usan en el futuro).
 
 # A veces, ser más explícito con los métodos y cabeceras permitidos soluciona
@@ -129,6 +133,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'clients.context_processors.app_config',  # Context processor para configuración personalizable
             ],
         },
     },
@@ -190,10 +195,15 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Ruta donde Django recopilará todos los archivos estáticos
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # Configuración para archivos subidos por los usuarios (media files)
 # Es necesario para que el campo `attachment` en el modelo Task funcione.
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

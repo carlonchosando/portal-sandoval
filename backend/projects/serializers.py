@@ -33,6 +33,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             'id', 'name', 'client', 'client_id', 'description', 'status', 
             'start_date', 'initial_cost', 'extra_cost', 'total_cost', 'task_count',
             'tasks_with_cost_count', 'tasks_without_cost_count',
+            'youtube_url', 'attachment', 'currency',
             'created_at'
         ]
 
